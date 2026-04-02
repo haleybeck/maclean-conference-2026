@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>37th Annual MacLean Conference on Clinical Medical Ethics</title>
+<style>
+  :root {
+    --maroon: #800000;
+    --maroon-dark: #5c0000;
+    --maroon-light: #a03030;
+    --cream: #faf7f2;
+    --gold: #c4a747;
+    --text: #2c2c2c;
+    --text-light: #666;
+    --border: #e0d5ca;
+    --card-bg: #ffffff;
+    --selected-bg: #fef8f0;
+    --tag-bg: #f3ebe1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Georgia', 'Times New Roman', serif; background: var(--cream); color: var(--text); line-height: 1.5; min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--maroon); color: white; padding: 20px 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+  .header-top { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 4px; }
+  .header .shield { width: 44px; height: 44px; background: rgba(255,255,255,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.3; }
+  .header .subtitle { font-size: 0.82rem; opacity: 0.85; margin-top: 2px; font-style: italic; }
+
+  /* Nav */
+  .nav { display: flex; background: var(--maroon-dark); justify-content: center; position: sticky; top: 0; z-index: 99; }
+  .nav button { font-family: 'Georgia', serif; padding: 12px 24px; border: none; background: transparent; color: rgba(255,255,255,0.7); font-size: 0.92rem; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; letter-spacing: 0.3px; }
+  .nav button:hover { color: white; background: rgba(255,255,255,0.07); }
+  .nav button.active { color: white; border-bottom-color: var(--gold); background: rgba(255,255,255,0.1); font-weight: 700; }
+  .nav .badge { background: var(--gold); color: var(--maroon-dark); font-size: 0.7rem; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; font-family: sans-serif; }
+
+  /* Content */
+  .content { max-width: 900px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* Day tabs */
+  .day-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+  .day-tab { font-family: 'Georgia', serif; padding: 10px 28px; border: 2px solid var(--maroon); background: white; color: var(--maroon); border-radius: 30px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+  .day-tab:hover { background: var(--maroon); color: white; }
+  .day-tab.active { background: var(--maroon); color: white; }
+
+  /* Time block */
+  .time-block { margin-bottom: 28px; }
+  .time-label { font-size: 0.82rem; font-weight: 700; color: var(--maroon); text-transform: uppercase; letter-spacing: 1.5px; padding: 0 4px 8px; border-bottom: 2px solid var(--maroon); margin-bottom: 12px; font-family: 'Helvetica Neue', Arial, sans-serif; }
+
+  /* Session group card — the parent container */
+  .session-group {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .session-type { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 10px; border-radius: 4px; margin-bottom: 8px; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .type-plenary { background: var(--maroon); color: white; }
+  .type-breakout { background: var(--tag-bg); color: var(--maroon); }
+  .type-panel { background: #e8d5c4; color: #5c3a1e; }
+  .type-keynote { background: var(--gold); color: var(--maroon-dark); }
+  .type-special { background: #d4e6d4; color: #2d5a2d; }
+  .type-breakfast { background: #e0dde8; color: #44396a; }
+
+  .group-title { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 4px; line-height: 1.35; }
+  .group-meta { font-size: 0.8rem; color: var(--text-light); margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  .group-speaker { font-size: 0.88rem; color: var(--maroon-light); font-style: italic; margin-bottom: 2px; }
+
+  /* Individual selectable item within a session group */
+  .selectable-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 10px;
+    margin: 4px -4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .selectable-item:hover { background: rgba(128,0,0,0.03); border-color: var(--border); }
+  .selectable-item.selected { background: var(--selected-bg); border-color: var(--maroon); box-shadow: 0 0 0 1px rgba(128,0,0,0.1); }
+  .selectable-item .item-check {
+    width: 24px; height: 24px; min-width: 24px;
+    border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; font-size: 13px; color: transparent; background: white; margin-top: 1px;
+  }
+  .selectable-item.selected .item-check { background: var(--maroon); border-color: var(--maroon); color: white; }
+  .item-content { flex: 1; }
+  .item-title { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .item-speaker { font-size: 0.82rem; color: var(--text-light); font-style: italic; margin-top: 2px; }
+  .item-location { font-size: 0.75rem; color: var(--maroon-light); font-family: sans-serif; margin-top: 3px; font-weight: 600; }
+
+  .sub-divider { border-top: 1px solid var(--border); margin: 6px 0; }
+
+  /* Standalone selectable (sessions without sub-items) */
+  .standalone-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .standalone-card:hover { box-shadow: 0 3px 12px rgba(128,0,0,0.1); border-color: var(--maroon-light); }
+  .standalone-card.selected { border-color: var(--maroon); background: var(--selected-bg); box-shadow: 0 0 0 2px rgba(128,0,0,0.15); }
+  .standalone-card .item-check {
+    width: 26px; height: 26px; min-width: 26px;
+    border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; font-size: 14px; color: transparent; background: white; margin-top: 2px;
+  }
+  .standalone-card.selected .item-check { background: var(--maroon); border-color: var(--maroon); color: white; }
+
+  /* Sub-item type tag (Panel / Breakout) */
+  .sub-type-tag {
+    display: inline-block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    padding: 1px 7px; border-radius: 3px; margin-bottom: 4px; font-family: 'Helvetica Neue', Arial, sans-serif; vertical-align: middle;
+  }
+  .sub-tag-panel { background: #e8d5c4; color: #5c3a1e; }
+  .sub-tag-breakout { background: var(--tag-bg); color: var(--maroon); }
+
+  /* Break card */
+  .break-card { text-align: center; padding: 14px; color: var(--text-light); font-style: italic; font-size: 0.95rem; border-left: 3px solid var(--border); margin-bottom: 10px; background: rgba(255,255,255,0.5); border-radius: 0 8px 8px 0; }
+
+  /* My Schedule */
+  .sched-day-header { font-size: 0.9rem; font-weight: 700; color: white; background: var(--maroon); display: inline-block; padding: 6px 18px; border-radius: 6px; margin-bottom: 12px; }
+  .sched-time-group { margin-bottom: 20px; }
+  .sched-time-label { font-size: 0.78rem; font-weight: 700; color: var(--maroon); text-transform: uppercase; letter-spacing: 1px; font-family: sans-serif; margin-bottom: 8px; }
+  .sched-item {
+    background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; position: relative;
+  }
+  .sched-item-title { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .sched-item-speaker { font-size: 0.84rem; color: var(--text-light); font-style: italic; margin-top: 2px; }
+  .sched-item-meta { font-size: 0.75rem; color: var(--maroon-light); font-family: sans-serif; margin-top: 4px; font-weight: 600; }
+  .sched-remove { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 1.1rem; color: var(--text-light); cursor: pointer; padding: 4px; border-radius: 4px; }
+  .sched-remove:hover { color: #cc0000; background: #fce8e8; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+  .empty-state p { font-size: 0.92rem; max-width: 360px; margin: 0 auto; }
+
+  /* Search & Filter */
+  .search-bar { width: 100%; padding: 12px 16px 12px 42px; border: 1px solid var(--border); border-radius: 30px; font-size: 0.92rem; font-family: 'Georgia', serif; background: white; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  .search-bar:focus { border-color: var(--maroon); }
+  .search-wrap { position: relative; }
+  .search-wrap::before { content: '\1F50D'; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+  .filter-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); font-family: sans-serif; font-weight: 700; }
+  .filter-chip { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: 0.8rem; cursor: pointer; font-family: sans-serif; transition: all 0.15s; color: var(--text); }
+  .filter-chip:hover { border-color: var(--maroon); }
+  .filter-chip.active { background: var(--maroon); color: white; border-color: var(--maroon); }
+
+  /* FAB */
+  .fab { position: fixed; bottom: 24px; right: 24px; background: var(--maroon); color: white; border: none; border-radius: 50px; padding: 14px 24px; font-size: 0.9rem; font-family: 'Georgia', serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(128,0,0,0.35); transition: all 0.2s; z-index: 50; display: none; }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(128,0,0,0.45); }
+
+  /* Presenters */
+  .presenter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .presenter-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .presenter-name { font-weight: 700; font-size: 0.95rem; color: var(--maroon); }
+  .presenter-affiliation { font-size: 0.82rem; color: var(--text-light); margin-top: 2px; }
+  .presenter-role { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); font-weight: 700; font-family: sans-serif; margin-bottom: 4px; }
+
+  /* Info */
+  .info-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .info-section h2 { font-size: 1.1rem; color: var(--maroon); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .info-section p, .info-section li { font-size: 0.92rem; line-height: 1.6; color: var(--text); }
+  .info-section ul { margin-left: 20px; margin-top: 8px; }
+  .info-section li { margin-bottom: 6px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Conflict */
+  .conflict-warning { background: #fff3e0; border: 1px solid #ffcc02; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; font-family: sans-serif; color: #7a5a00; display: flex; align-items: center; gap: 8px; }
+
+  /* Print */
+  @media print { .header, .nav, .fab, .search-wrap, .filter-row, .day-tabs { display: none !important; } .content { padding: 0; } .item-check { display: none !important; } }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header h1 { font-size: 0.95rem; }
+    .nav button { padding: 10px 14px; font-size: 0.82rem; }
+    .content { padding: 14px 10px 80px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .day-tab { padding: 8px 18px; font-size: 0.82rem; }
+  }
+
+  /* Select all / none helper */
+  .select-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .select-action-btn {
+    font-size: 0.72rem; font-family: sans-serif; color: var(--maroon); background: none; border: 1px solid var(--border);
+    border-radius: 12px; padding: 2px 10px; cursor: pointer; transition: all 0.15s; font-weight: 600;
+  }
+  .select-action-btn:hover { background: var(--maroon); color: white; border-color: var(--maroon); }
+
+  /* Room label inside breakout groups */
+  .room-label {
+    font-size: 0.72rem; font-weight: 700; color: var(--maroon); background: rgba(128,0,0,0.06);
+    padding: 3px 10px; border-radius: 4px; display: inline-block; margin: 8px 0 4px; font-family: sans-serif;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  /* Login Overlay */
+  .login-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--cream); z-index: 1000; display: flex;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: white; border-radius: 16px; padding: 40px 32px;
+    max-width: 420px; width: 100%; text-align: center;
+    border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+  .login-card .shield-lg { font-size: 2.5rem; margin-bottom: 12px; }
+  .login-card h2 { font-size: 1.2rem; color: var(--maroon); margin-bottom: 4px; }
+  .login-card .login-subtitle { font-size: 0.88rem; color: var(--text-light); margin-bottom: 24px; }
+  .login-card input[type="text"] {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px;
+    font-size: 1rem; font-family: 'Georgia', serif; outline: none; transition: border-color 0.2s;
+    text-align: center;
+  }
+  .login-card input[type="text"]:focus { border-color: var(--maroon); }
+  .login-card input[type="text"]::placeholder { color: #bbb; }
+  .login-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: var(--maroon); color: white; font-size: 1rem;
+    font-family: 'Georgia', serif; font-weight: 700; cursor: pointer;
+    margin-top: 12px; transition: background 0.2s;
+  }
+  .login-btn:hover { background: var(--maroon-dark); }
+  .login-btn:disabled { background: #ccc; cursor: default; }
+  .login-divider {
+    display: flex; align-items: center; gap: 12px; margin: 20px 0;
+    font-size: 0.8rem; color: var(--text-light); font-family: sans-serif;
+  }
+  .login-divider::before, .login-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .login-code-input {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px;
+    font-size: 1.1rem; font-family: 'Courier New', monospace; outline: none;
+    text-align: center; letter-spacing: 3px; text-transform: uppercase;
+    transition: border-color 0.2s;
+  }
+  .login-code-input:focus { border-color: var(--maroon); }
+  .login-code-input::placeholder { letter-spacing: 0; font-size: 0.9rem; font-family: 'Georgia', serif; }
+  .login-error { color: #cc0000; font-size: 0.82rem; margin-top: 8px; font-family: sans-serif; min-height: 20px; }
+  .login-skip {
+    background: none; border: none; color: var(--text-light); font-size: 0.82rem;
+    cursor: pointer; margin-top: 16px; font-family: sans-serif; text-decoration: underline;
+  }
+  .login-skip:hover { color: var(--text); }
+
+  /* User bar */
+  .user-bar {
+    background: rgba(128,0,0,0.08); padding: 6px 16px; display: flex;
+    align-items: center; justify-content: center; gap: 10px;
+    font-size: 0.78rem; font-family: sans-serif; color: var(--maroon);
+  }
+  .user-bar .user-name { font-weight: 700; }
+  .user-bar .user-code { font-family: 'Courier New', monospace; letter-spacing: 1px; background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .user-bar button {
+    background: none; border: 1px solid var(--maroon); color: var(--maroon);
+    padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; cursor: pointer;
+    font-family: sans-serif; font-weight: 600;
+  }
+  .user-bar button:hover { background: var(--maroon); color: white; }
+  .sync-status { font-size: 0.7rem; color: var(--text-light); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="shield">&#9883;</div>
+    <div>
+      <h1>The MacLean Center</h1>
+      <div style="font-size:0.78rem;letter-spacing:2px;text-transform:uppercase;opacity:0.8;">37th Annual Conference on Clinical Medical Ethics</div>
+    </div>
+  </div>
+  <div class="subtitle">April 10–11, 2026 &middot; David Rubenstein Forum, University of Chicago</div>
+</div>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="shield-lg">&#9883;</div>
+    <h2>Welcome to the MacLean Conference</h2>
+    <div class="login-subtitle">Save your schedule and access it from any device</div>
+
+    <div id="loginNewSection">
+      <input type="text" id="loginNameInput" placeholder="Enter your name" maxlength="60">
+      <button class="login-btn" id="loginNewBtn" onclick="createNewAccount()">Create My Schedule</button>
+    </div>
+
+    <div class="login-divider">or retrieve an existing schedule</div>
+
+    <div id="loginCodeSection">
+      <input type="text" class="login-code-input" id="loginCodeInput" placeholder="Enter your code" maxlength="8">
+      <button class="login-btn" id="loginCodeBtn" onclick="loginWithCode()" style="background:white;color:var(--maroon);border:2px solid var(--maroon);">Retrieve Schedule</button>
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+    <button class="login-skip" onclick="skipLogin()">Continue without saving</button>
+  </div>
+</div>
+
+<!-- USER BAR (shown when logged in) -->
+<div class="user-bar" id="userBar" style="display:none;">
+  <span>Signed in as <span class="user-name" id="userDisplayName"></span></span>
+  <span class="user-code" id="userDisplayCode"></span>
+  <span class="sync-status" id="syncStatus"></span>
+  <button onclick="logout()">Sign Out</button>
+</div>
+
+<div class="nav" id="mainNav">
+  <button class="active" onclick="showTab('program')">Program</button>
+  <button onclick="showTab('schedule')">My Schedule <span class="badge" id="schedBadge" style="display:none">0</span></button>
+  <button onclick="showTab('presenters')">Presenters</button>
+  <button onclick="showTab('info')">Info</button>
+</div>
+
+<!-- PROGRAM TAB -->
+<div class="content" id="tab-program">
+  <div class="search-wrap">
+    <input type="text" class="search-bar" placeholder="Search sessions, speakers, topics..." id="searchInput" oninput="renderProgram()">
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">Filter:</span>
+    <span class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</span>
+    <span class="filter-chip" data-filter="plenary" onclick="setFilter('plenary')">Plenary</span>
+    <span class="filter-chip" data-filter="panel" onclick="setFilter('panel')">Panels</span>
+    <span class="filter-chip" data-filter="breakout" onclick="setFilter('breakout')">Breakouts</span>
+    <span class="filter-chip" data-filter="keynote" onclick="setFilter('keynote')">Keynote</span>
+    <span class="filter-chip" data-filter="special" onclick="setFilter('special')">Special</span>
+  </div>
+  <div class="day-tabs">
+    <button class="day-tab active" onclick="showDay('friday')">Fri, April 10</button>
+    <button class="day-tab" onclick="showDay('saturday')">Sat, April 11</button>
+  </div>
+  <div id="programList"></div>
+</div>
+
+<!-- MY SCHEDULE TAB -->
+<div class="content" id="tab-schedule" style="display:none">
+  <div id="myScheduleContent"></div>
+</div>
+
+<!-- PRESENTERS TAB -->
+<div class="content" id="tab-presenters" style="display:none">
+  <div class="search-wrap">
+    <input type="text" class="search-bar" placeholder="Search presenters..." id="presenterSearch" oninput="renderPresenters()">
+  </div>
+  <div id="presenterList" class="presenter-grid"></div>
+</div>
+
+<!-- INFO TAB -->
+<div class="content" id="tab-info" style="display:none">
+  <div class="info-section">
+    <h2>About the Conference</h2>
+    <p>Join leading experts and colleagues for an engaging exploration of today's most pressing ethical challenges in medicine. This dynamic conference equips healthcare professionals with practical tools and fresh perspectives to navigate complex ethical dilemmas across diverse clinical settings.</p>
+    <p style="margin-top:10px;">Through thought-provoking lectures, interactive panel discussions, and rich collaboration, participants will gain strategies to strengthen the patient-physician relationship, ensure informed consent, and address disparities in care and outcomes.</p>
+    <p style="margin-top:10px;"><strong>Featuring the 2026 MacLean Center Prize Winner:</strong> Margaret "Gretchen" Schwarze, MD, MPP</p>
+  </div>
+  <div class="info-section">
+    <h2>Conference Location</h2>
+    <p><strong>David Rubenstein Forum</strong><br>University of Chicago<br>1201 E 60th St<br>Chicago, IL 60637</p>
+    <p style="margin-top:10px;"><a href="https://cme.uchicago.edu/maclean2026" style="color:var(--maroon);font-weight:700;">cme.uchicago.edu/maclean2026</a></p>
+  </div>
+  <div class="info-grid">
+    <div class="info-section">
+      <h2>Target Audience</h2>
+      <p>Physicians, nurses, residents, students, and other healthcare professionals interested in clinical medical ethics.</p>
+    </div>
+    <div class="info-section">
+      <h2>Pricing</h2>
+      <p>General Admission: $350<br>Fellow Alumni: $300<br>MacLean Faculty: $175<br>Residents & Fellows: $150<br>Students: $100</p>
+    </div>
+  </div>
+  <div class="info-section">
+    <h2>Learning Objectives</h2>
+    <ul>
+      <li>Analyze ethical situations that arise in routine clinical encounters</li>
+      <li>Evaluate diverse perspectives, including legal, medical, cultural, and religious, when addressing clinical ethical dilemmas</li>
+      <li>Integrate current literature, policies, and directives in clinical medical ethics to support decision-making in practice</li>
+      <li>Examine how clinical medical ethics principles influence the healthcare system and specialty-specific practice</li>
+      <li>Apply the tenets of clinical medical ethics to case-based scenarios within participants' specialties</li>
+    </ul>
+  </div>
+  <div class="info-section">
+    <h2>Continuing Education Credit</h2>
+    <p><strong>Physicians:</strong> Up to 12.75 AMA PRA Category 1 Credits&trade;. The University of Chicago Pritzker School of Medicine is accredited by the ACCME.</p>
+    <p style="margin-top:8px;"><strong>Social Workers:</strong> 12.75 continuing education units for LSW and LCSW social workers in Illinois.</p>
+    <p style="margin-top:8px;"><strong>Other Participants:</strong> Certificate of Participation provided.</p>
+  </div>
+  <div class="info-section">
+    <h2>Course Director</h2>
+    <p><strong>Peter Angelos, MD, PhD, HEC-C</strong><br>Kilbride-Siegler-Clinton Professor of Surgery and Medicine<br>Director, MacLean Center for Clinical Medical Ethics</p>
+  </div>
+  <div class="info-section">
+    <h2>Contact</h2>
+    <p>MacLean Center Staff: Anne Wong, Haley Beck, Natasha Megherea</p>
+    <p style="margin-top:6px;">Email: <a href="mailto:macleancenter@bsd.uchicago.edu" style="color:var(--maroon);">macleancenter@bsd.uchicago.edu</a></p>
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" onclick="showTab('schedule')">View My Schedule</button>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════
+// FIREBASE SETUP
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAIXslw1WQTCpO-f2Hie8KQlGQHQ2AzBzI",
+  authDomain: "maclean-conference-2026.firebaseapp.com",
+  projectId: "maclean-conference-2026",
+  storageBucket: "maclean-conference-2026.firebasestorage.app",
+  messagingSenderId: "1077972310615",
+  appId: "1:1077972310615:web:1b74a75fcb0ffc3a50e112",
+  databaseURL: "https://maclean-conference-2026-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ══════════════════════════════════════
+// DATA: Each item in `events` is a time-slot group.
+// Items with `subs` contain individually selectable presentations.
+// Items without `subs` are standalone selectable events.
+// Items with type "break" are not selectable.
+// ══════════════════════════════════════
+
+const events = [
+  // ─── FRIDAY, APRIL 10 ───
+  {
+    id: "f-meal-breakfast", day: "friday", time: "8:00 am", sort: 799,
+    title: "Breakfast", type: "break", location: "University Room AB", moderator: "", subs: []
+  },
+  {
+    id: "f-breakfast", day: "friday", time: "8:00 am", sort: 800,
+    title: "Small Group Discussions", type: "breakfast",
+    location: "University Room AB", moderator: "",
+    subs: [
+      { id: "f-br-1", title: "Empirical Ethics Research", speaker: "Moderator: Micah Prochaska, MD", location: "" },
+      { id: "f-br-2", title: "External Grant Funding in Ethics", speaker: "Moderator: Will Parker, MD, PhD", location: "" },
+      { id: "f-br-3", title: "Publishing in Ethics", speaker: "Moderator: Norman Quist", location: "" },
+      { id: "f-br-4", title: "Pediatric Ethics", speaker: "Moderator: Rebecca Propper, MD", location: "" }
+    ]
+  },
+  {
+    id: "f-welcome", day: "friday", time: "9:00 am", sort: 900,
+    title: "Welcome and Introduction", type: "special",
+    location: "Friedman Hall (Auditorium)", moderator: "Peter Angelos, MD, PhD, HEC-C", subs: []
+  },
+  {
+    id: "f-plenary1", day: "friday", time: "9:15 am", sort: 915,
+    title: "Plenary Paper Presentations: Systems, Policy, and Clinical Workflow Ethics", type: "plenary",
+    location: "Friedman Hall (Auditorium)", moderator: "Moderator: Monica Peek, MD",
+    subs: [
+      { id: "f-p1-1", title: "Patient Transfers and Expectation Inertia: Ethical Frameworks for Management", speaker: "Arnav Shandilya, BS", location: "Friedman Hall (Auditorium)" },
+      { id: "f-p1-2", title: "The Electronic Medical Record: The Biography the Patient Cannot Edit", speaker: "Gabrielle Sudilovsky, BA", location: "Friedman Hall (Auditorium)" },
+      { id: "f-p1-3", title: "The Devil in the Details: Inconsistent Notification and Unclear Timeline Requirements Undermine Fairness in Potentially Inappropriate Treatment Policies", speaker: "Jay Carlson, PhD", location: "Friedman Hall (Auditorium)" },
+      { id: "f-p1-4", title: "Is Scope Creep a Professional Failure for Clinical Ethics Consultants?", speaker: "L. August Yu, MA", location: "Friedman Hall (Auditorium)" }
+    ]
+  },
+  { id: "f-break1", day: "friday", time: "10:35 am", sort: 1035, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
+  {
+    id: "f-bo11", day: "friday", time: "11:00 am", sort: 1100,
+    title: "Concurrent Breakout Sessions", type: "breakout",
+    location: "", moderator: "",
+    subs: [
+      { id: "f-bo11-1", title: "Trust and Connection in Virtual Surgical Care: A Patient Survey", speaker: "Dana I. Anderson, MD", location: "Room 501 — Trust, Communication, & Patient Perspectives", room: "Room 501", roomModerator: "Moderator: Baddr Shakhsheer, MD" },
+      { id: "f-bo11-2", title: "Advancing Healthcare Equity in Transplant Surgery: Cultivating Trust through Communication", speaker: "Ashley N. Suah, MD; Roy Wilson, BA", location: "Room 501", room: "Room 501" },
+      { id: "f-bo11-3", title: "Phrases Commonly Associated with Negatively Perceived Goals of Care Conversation Notes", speaker: "Gina Piscitello, MD, MS", location: "Room 501", room: "Room 501" },
+      { id: "f-bo11-4", title: "Ethics Consultation Services as a Core Component of Institutional Integrity: Lessons from Accreditation Standards", speaker: "Charlotte Harrington, MD", location: "Room 502 — Ethics Services, Policies, & Standards", room: "Room 502", roomModerator: "Moderator: Megan Applewhite, MD, MA" },
+      { id: "f-bo11-5", title: "HLA Fairness in Novel TCR T-Cell Therapies", speaker: "Yifei Hu, MD, PhD", location: "Room 502", room: "Room 502" },
+      { id: "f-bo11-6", title: "Choreographies of Care: Rhythm and Resonance in Clinical Medical Ethics Practice", speaker: "Erika \"Ann\" Jeschke, PhD", location: "Room 502", room: "Room 502" },
+      { id: "f-bo11-7", title: "Transhumanism and the Goals of Medicine: Clinical Boundaries and Theological Reflections", speaker: "Aasim I. Padela, MD, MSc", location: "Room 503 — Philosophy, Theory, & Wisdom", room: "Room 503", roomModerator: "Moderator: Daniel Brudney, PhD" },
+      { id: "f-bo11-8", title: "Salutogenic Medicine and Expressive Autonomy", speaker: "Andrew J. Baldassarre, MA", location: "Room 503", room: "Room 503" },
+      { id: "f-bo11-9", title: "The Ethical and Relational Dynamics of Moral Distress and Practical Wisdom: A Qualitative Study of U.S. Physicians", speaker: "Peter McCarthy, BA; Daniel Kim, PhD, MPH", location: "Room 503", room: "Room 503" },
+      { id: "f-bo11-10", title: "#DoNoHarm: Ethics and Professionalism in the Medfluencer Era", speaker: "Ava Shoal Randel, MA, MDiv", location: "Room 504 — Professionalism & Physician Well-Being", room: "Room 504", roomModerator: "Moderator: Jason Sulkowski, MD" },
+      { id: "f-bo11-11", title: "Say 'No' to 'Yes' Men: The Mandate Against Tying Physician Compensation to Patient Satisfaction Scores", speaker: "Nathaniel Mattera, BA", location: "Room 504", room: "Room 504" },
+      { id: "f-bo11-12", title: "Evaluating and Cultivating Pediatrics Trainees' Knowledge and Attitudes Toward Deafness and Disability in Young Children", speaker: "Cynthia Zhang, BA", location: "Room 504", room: "Room 504" }
+    ]
+  },
+  { id: "f-lunch", day: "friday", time: "12:00 pm", sort: 1200, title: "Lunch", type: "break", location: "University Room AB", moderator: "", subs: [] },
+  {
+    id: "f-conc1", day: "friday", time: "1:00 pm", sort: 1300,
+    title: "Concurrent Panel Sessions & Breakout Sessions", type: "panel",
+    location: "", moderator: "",
+    subs: [
+      { id: "f-c1-1", title: "Panel: Moral Distress in Genetic Counseling Imposed by Colleagues and Patients", speaker: "Jay Moore, MS, CGC; Darcy Huismann, MS, CGC; Justin Horn, PhD; Yazmin Enchautegui-Colon, MD", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
+      { id: "f-c1-2", title: "Panel: Career Fear and Care Deferred — Ethical, Evidence-Based Analysis of Barriers to Physician Mental Health and Suicide Prevention", speaker: "Val Bellman, MD, PsyD; Eden Nohra, MD", location: "Room 504", room: "Room 504" },
+      { id: "f-c1-3", title: "Bereavement Birth Planning: A Framework for Death at the Beginning of Life", speaker: "Luke Gatta, MD; Allison M. McCarthy, PhD", location: "Room 502 — Pediatrics & Birth Planning", room: "Room 502", roomModerator: "Moderator: Deborah Loeff, MD" },
+      { id: "f-c1-4", title: "Best Interest and Substituted Judgment in Situations without Temporal Urgency", speaker: "Arnav Shandilya, BS", location: "Room 502", room: "Room 502" },
+      { id: "f-c1-5", title: "Improving Guardianship Decisions Using a Patient Centered Algorithm", speaker: "Kimberly Martin, DNP, APN-C", location: "Room 502", room: "Room 502" },
+      { id: "f-c1-6", title: "Preserving Autonomy for Patients with Intellectual Disabilities: Perspectives from Daoist Ethics", speaker: "L. August Yu, MA", location: "Room 503 — Autonomy & Decision-Making", room: "Room 503", roomModerator: "Moderator: Rebecca Propper, MD" },
+      { id: "f-c1-7", title: "Autonomy and Its Limits: Reimagining Ethical Engagement Through Shared Decision-Making", speaker: "Mary Simmerling, PhD", location: "Room 503", room: "Room 503" },
+      { id: "f-c1-8", title: "The Quality-of-Life Directive: A Patient-Centered Approach to Advance Planning", speaker: "Julie L. Campbell, JD, LLM, CHC", location: "Room 503", room: "Room 503" },
+      { id: "f-c1-9", title: "Patterns of Life-Sustaining, Potentially Non-Beneficial Treatment and the Role of Palliative Care in Critically Ill Patients", speaker: "Ellen Cohn, MD, MPH", location: "Room 504 — Ethical Consistency & Justice in Critical Care", room: "Room 504b", roomModerator: "Moderator: Darren Bryan, MD" },
+      { id: "f-c1-10", title: "Honoring DNR Orders After Suicide Attempts: A Consistent-Preference Approach", speaker: "Charley D. Maples, PhD", location: "Room 504", room: "Room 504b" },
+      { id: "f-c1-11", title: "Inconsistencies in Informed Consent Practices During Critical Care Withdrawal", speaker: "Daniel Fu, MS", location: "Room 504", room: "Room 504b" },
+      { id: "f-c1-12", title: "Whose Justice? Which Distributive Theory?: Contractualism, Organs, and Allocative Justice", speaker: "Bharat Ranganathan, PhD, HEC-C; Karlie Zychowski, MD", location: "Room 504", room: "Room 504b" }
+    ]
+  },
+  { id: "f-break2", day: "friday", time: "1:45 pm", sort: 1345, title: "Break", type: "break", location: "", moderator: "", subs: [] },
+  {
+    id: "f-conc2", day: "friday", time: "2:00 pm", sort: 1400,
+    title: "Concurrent Panel Sessions", type: "panel",
+    location: "", moderator: "",
+    subs: [
+      { id: "f-c2-1", title: "Panel: Stop! Don't Intubate! DNR/DNI in the Setting of Refractory Psychiatric Illness", speaker: "Braylee Grisel, MD; Rebecca Propper, MD; Gregg Robbins-Welty, MD, MS, HEC-C; Nathan Scheiner, MD, MA", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
+      { id: "f-c2-2", title: "Panel: Imagining Oral Health Justice — Reimagining Professionalism and Missional Ethics in Dental Practice", speaker: "Carlos S. Smith, DDS, MDiv; Francine D. Lynch, JD, DBioethics", location: "Room 504", room: "Room 504" }
+    ]
+  },
+  { id: "f-break3", day: "friday", time: "2:45 pm", sort: 1445, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
+  {
+    id: "f-bo315", day: "friday", time: "3:15 pm", sort: 1515,
+    title: "Concurrent Breakout Sessions: Emergency & Critical Care Ethics", type: "breakout",
+    location: "Room 501", moderator: "Moderator: Will Parker, MD, PhD",
+    subs: [
+      { id: "f-bo3-1", title: "Ethical Triage in the ER: The Role of Clinical Ethicists in Emergency Departments", speaker: "Kimberly Vargas Barreto, PhD", location: "Room 501" },
+      { id: "f-bo3-2", title: "A Targeted Needs Assessment of End-of-Life Conversation Training in Pediatric Emergency Medicine Fellowship Programs", speaker: "Jacob Schulman, MD, MHPE", location: "Room 501" }
+    ]
+  },
+  { id: "f-adjourn", day: "friday", time: "4:30 pm", sort: 1630, title: "Adjourn", type: "break", location: "", moderator: "", subs: [] },
+
+  // ─── SATURDAY, APRIL 11 ───
+  {
+    id: "s-meal-breakfast", day: "saturday", time: "8:00 am", sort: 799,
+    title: "Breakfast", type: "break", location: "University Room AB", moderator: "", subs: []
+  },
+  {
+    id: "s-breakfast", day: "saturday", time: "8:00 am", sort: 800,
+    title: "Small Group Discussions", type: "breakfast",
+    location: "University Room AB", moderator: "",
+    subs: [
+      { id: "s-br-1", title: "Surgical Ethics", speaker: "Moderator: Sean Wightman, MD", location: "" },
+      { id: "s-br-2", title: "Medical Student Ethics Teaching", speaker: "Moderator: Julie Chor, MD", location: "" },
+      { id: "s-br-3", title: "Clinical Ethics Consultations", speaker: "Moderator: Kimberly Martin, DNP, APN-C", location: "" },
+      { id: "s-br-4", title: "Psychiatric Ethics", speaker: "Moderator: Elizabeth Kieff, MD", location: "" }
+    ]
+  },
+  {
+    id: "s-faspe", day: "saturday", time: "9:00 am", sort: 900,
+    title: "FASPE-Sponsored Session: The Role of Empathy in Clinical Practice", type: "special",
+    location: "Friedman Hall (Auditorium)", moderator: "Moderator: Rev. Michael Rozier, SJ | Panelists: Thorsten Wagner, MA & Michael LeChavallier, PhD, MDiv",
+    subs: []
+  },
+  {
+    id: "s-plenary2", day: "saturday", time: "10:00 am", sort: 1000,
+    title: "Plenary Paper Presentations: Education and Ethical Decision-Making", type: "plenary",
+    location: "Friedman Hall (Auditorium)", moderator: "Moderator: Marshall Chin, MD",
+    subs: [
+      { id: "s-p2-1", title: "Novel Multimodal OB/GYN Resident Ethics Curriculum Improves Resident and Faculty Confidence", speaker: "Heather Straub, MD", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p2-2", title: "Enhancing Value-Aligned Decision-Making in Pediatric Tracheostomy", speaker: "Hans C. Baertsch, MD", location: "Friedman Hall (Auditorium)" }
+    ]
+  },
+  { id: "s-break1", day: "saturday", time: "10:40 am", sort: 1040, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
+  {
+    id: "s-prize", day: "saturday", time: "11:00 am", sort: 1100,
+    title: "Awarding of 2026 MacLean Prize", type: "keynote",
+    location: "Friedman Hall (Auditorium)", moderator: "Introduction by Mark Anderson, MD, PhD — Dean of the Biological Sciences Division and Pritzker School of Medicine",
+    subs: []
+  },
+  {
+    id: "s-keynote", day: "saturday", time: "11:00 am", sort: 1101,
+    title: "MacLean Prize Keynote Address: Shared Decision Making and Other Strategically Ambiguous Shape Shifters", type: "keynote",
+    location: "Friedman Hall (Auditorium)", moderator: "Margaret \"Gretchen\" Schwarze, MD, MPP",
+    subs: []
+  },
+  { id: "s-lunch", day: "saturday", time: "12:00 pm", sort: 1200, title: "Lunch", type: "break", location: "University Room AB", moderator: "", subs: [] },
+  {
+    id: "s-plenary3", day: "saturday", time: "1:00 pm", sort: 1300,
+    title: "Plenary Paper Presentations: Ethics of Death, Dying, and Moral Challenges in Surgery", type: "plenary",
+    location: "Friedman Hall (Auditorium)", moderator: "Moderator: Megan Applewhite, MD, MA",
+    subs: [
+      { id: "s-p3-1", title: "Taking Precautions Beyond Death: Thoracoabdominal Normothermic Regional Perfusion and Research in Physiologically Maintained Deceased", speaker: "Christos Lazaridis, MD, EDIC, BPhil", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p3-2", title: "When Silence Harms: Misconceptions About CPR and a Legislative Path Forward", speaker: "Julie L. Campbell, JD, LLM, CHC", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p3-3", title: "The AMA's Morally Conflicted View of Physician Assistance in Dying", speaker: "Timothy F. Murphy, PhD", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p3-4", title: "A Case for Catharsis: Surgical M&M and the Emotions", speaker: "Ursula Francis, JD, PhD, MSc", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p3-5", title: "Leaving Skin, Taking Choices: Gendered Patterns of Surgical Paternalism", speaker: "Hannah R. Bentz, BS", location: "Friedman Hall (Auditorium)" }
+    ]
+  },
+  { id: "s-break2", day: "saturday", time: "2:40 pm", sort: 1440, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
+  {
+    id: "s-plenary4", day: "saturday", time: "3:00 pm", sort: 1500,
+    title: "Plenary Paper Presentations: Autonomy, Consent, and Decision-Making in Complex Care", type: "plenary",
+    location: "Friedman Hall (Auditorium)", moderator: "Moderator: Baddr Shakhsheer, MD",
+    subs: [
+      { id: "s-p4-1", title: "The Hidden Ethics of Adhesion: Reconsidering Informed Consent in Contemporary Clinical Practice", speaker: "Mnotho Ngcobo, JD, LLM, LLD", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p4-2", title: "Depression and Autonomy in Advanced Chronic Disease", speaker: "Jeffrey T. Poomkudy, MD, MA", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p4-3", title: "Pregnancy, Incapacity, and the Law: Navigating Advance Directives Under State Pregnancy Exemptions", speaker: "Madeline Canal, BS", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p4-4", title: "Perceptions of Healthcare Provider Conflicts of Interest Across Socioeconomic and Educational Groups", speaker: "Kyron Wicker, BS", location: "Friedman Hall (Auditorium)" },
+      { id: "s-p4-5", title: "What Defines a \"Goals of Care\" Conversation for Surgeons?", speaker: "Sofia Cohen, BA", location: "Friedman Hall (Auditorium)" }
+    ]
+  },
+  {
+    id: "s-closing", day: "saturday", time: "4:40 pm", sort: 1640,
+    title: "Closing Remarks & Adjournment", type: "special",
+    location: "Friedman Hall (Auditorium)", moderator: "Peter Angelos, MD, PhD, HEC-C", subs: []
+  }
+];
+
+// Build a flat lookup: subId -> parent event info
+const subLookup = {};
+events.forEach(ev => {
+  (ev.subs || []).forEach(sub => {
+    subLookup[sub.id] = { parentId: ev.id, parentTitle: ev.title, parentType: ev.type, day: ev.day, time: ev.time, sort: ev.sort };
+  });
+});
+
+// ══════════════════════════════════════
+// PRESENTERS
+// ══════════════════════════════════════
+const presenters = [
+  { name: "Peter Angelos, MD, PhD, HEC-C", affiliation: "Kilbride-Siegler-Clinton Professor of Surgery and Medicine, University of Chicago", role: "Course Director" },
+  { name: "Margaret \"Gretchen\" Schwarze, MD, MPP", affiliation: "University of Wisconsin-Madison", role: "MacLean Prize Winner" },
+  { name: "Dana I. Anderson, MD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Jay Carlson, PhD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Ellen Cohn, MD, MPH", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Ursula Francis, JD, PhD, MSc", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Charlotte Harrington, MD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Erika \"Ann\" Jeschke, PhD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Christos Lazaridis, MD, EDIC, BPhil", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Kimberly Martin, DNP, APN-C", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Rebecca Propper, MD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Jacob Schulman, MD, MHPE", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Arnav Shandilya, BS", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Ashley N. Suah, MD", affiliation: "MacLean Center", role: "MacLean Center" },
+  { name: "Hans C. Baertsch, MD", affiliation: "University of Minnesota", role: "Guest Presenter" },
+  { name: "Andrew J. Baldassarre, MA", affiliation: "Albert Gnaegi Center for Health Care Ethics, Saint Louis University", role: "Guest Presenter" },
+  { name: "Kimberly Vargas Barreto, PhD", affiliation: "Providence Center for Health Care Ethics", role: "Guest Presenter" },
+  { name: "Val Bellman, MD, PsyD", affiliation: "The Chicago School", role: "Guest Presenter" },
+  { name: "Hannah R. Bentz, BS", affiliation: "Harvard Medical School Center for Bioethics", role: "Guest Presenter" },
+  { name: "Julie L. Campbell, JD, LLM, CHC", affiliation: "Louis D. Brandeis School of Law, University of Louisville", role: "Guest Presenter" },
+  { name: "Madeline Canal, BS", affiliation: "University of Florida College of Medicine", role: "Guest Presenter" },
+  { name: "Sofia Cohen, BA", affiliation: "Washington University in St Louis School of Medicine", role: "Guest Presenter" },
+  { name: "Yazmin Enchautegui-Colon, MD", affiliation: "University of Oklahoma", role: "Guest Presenter" },
+  { name: "Daniel Fu, MS", affiliation: "University of Chicago Pritzker School of Medicine", role: "Guest Presenter" },
+  { name: "Luke Gatta, MD", affiliation: "Vanderbilt University School of Medicine", role: "Guest Presenter" },
+  { name: "Braylee Grisel, MD", affiliation: "University of Chicago Medicine", role: "Guest Presenter" },
+  { name: "Justin Horn, PhD", affiliation: "Virginia Tech", role: "Guest Presenter" },
+  { name: "Yifei Hu, MD, PhD", affiliation: "University of Chicago Medicine", role: "Guest Presenter" },
+  { name: "Darcy Huismann, MS, CGC", affiliation: "Mayo Clinic", role: "Guest Presenter" },
+  { name: "Daniel Kim, PhD, MPH", affiliation: "Alden March Bioethics Institute, Albany Medical College", role: "Guest Presenter" },
+  { name: "Michael LeChavallier, PhD, MDiv", affiliation: "The Lumen Christi Institute", role: "Guest Presenter" },
+  { name: "Francine D. Lynch, JD, DBioethics", affiliation: "American Dental Association", role: "Guest Presenter" },
+  { name: "Charley D. Maples, PhD", affiliation: "Alden March Bioethics Institute, Albany Medical College", role: "Guest Presenter" },
+  { name: "Nathaniel Mattera, BA", affiliation: "University of Illinois College of Medicine", role: "Guest Presenter" },
+  { name: "Allison M. McCarthy, PhD", affiliation: "Center for Biomedical Ethics and Society, Vanderbilt University", role: "Guest Presenter" },
+  { name: "Peter McCarthy, BA", affiliation: "Alden March Bioethics Institute, Albany Medical College", role: "Guest Presenter" },
+  { name: "Jay Moore, MS, CGC", affiliation: "University of Colorado Anschutz", role: "Guest Presenter" },
+  { name: "Timothy F. Murphy, PhD", affiliation: "University of Illinois College of Medicine", role: "Guest Presenter" },
+  { name: "Mnotho Ngcobo, JD, LLM, LLD", affiliation: "Louis D. Brandeis School of Law, University of Louisville", role: "Guest Presenter" },
+  { name: "Eden Nohra, MD", affiliation: "Texas Tech University Health Sciences Center", role: "Guest Presenter" },
+  { name: "Aasim I. Padela, MD, MSc", affiliation: "The Medical College of Wisconsin", role: "Guest Presenter" },
+  { name: "Gina Piscitello, MD, MS", affiliation: "University of Pittsburgh", role: "Guest Presenter" },
+  { name: "Jeffrey T. Poomkudy, MD, MA", affiliation: "Zucker School of Medicine at Hofstra/Northwell", role: "Guest Presenter" },
+  { name: "Bharat Ranganathan, PhD, HEC-C", affiliation: "University of Nebraska at Omaha, Nebraska Medicine", role: "Guest Presenter" },
+  { name: "Ava Shoal Randel, MA, MDiv", affiliation: "The Hastings Center for Bioethics", role: "Guest Presenter" },
+  { name: "Gregg Robbins-Welty, MD, MS, HEC-C", affiliation: "Emory University School of Medicine", role: "Guest Presenter" },
+  { name: "Nathan Scheiner, MD, MA", affiliation: "Emory University School of Medicine", role: "Guest Presenter" },
+  { name: "Mary Simmerling, PhD", affiliation: "Cornell University", role: "Guest Presenter" },
+  { name: "Carlos S. Smith, DDS, MDiv", affiliation: "Virginia Commonwealth University School of Dentistry", role: "Guest Presenter" },
+  { name: "Heather Straub, MD", affiliation: "University of Colorado Anschutz Medical Campus", role: "Guest Presenter" },
+  { name: "Gabrielle Sudilovsky, BA", affiliation: "University of Chicago Pritzker School of Medicine", role: "Guest Presenter" },
+  { name: "L. August Yu, MA", affiliation: "Fordham University and Montefiore Center for Bioethics", role: "Guest Presenter" },
+  { name: "Thorsten Wagner, MA", affiliation: "Fellowships at Auschwitz for the Study of Professional Ethics", role: "Guest Presenter" },
+  { name: "Kyron Wicker, BS", affiliation: "Lake Erie College of Osteopathic Medicine", role: "Guest Presenter" },
+  { name: "Roy Wilson, BA", affiliation: "Pritzker School of Medicine", role: "Guest Presenter" },
+  { name: "Cynthia Zhang, BA", affiliation: "Pritzker School of Medicine", role: "Guest Presenter" },
+  { name: "Karlie Zychowski, MD", affiliation: "University of Wisconsin", role: "Guest Presenter" }
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let selected = new Set(JSON.parse(localStorage.getItem('maclean2026_v2') || '[]'));
+let currentDay = 'friday';
+let currentFilter = 'all';
+let currentTab = 'program';
+
+// User session
+let currentUser = JSON.parse(localStorage.getItem('maclean2026_user') || 'null');
+// { name: "...", code: "XXXX" }
+
+// ══════════════════════════════════════
+// LOGIN / ACCOUNT SYSTEM
+// ══════════════════════════════════════
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function createNewAccount() {
+  const nameInput = document.getElementById('loginNameInput');
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+
+  const btn = document.getElementById('loginNewBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  document.getElementById('loginError').textContent = '';
+
+  try {
+    // Generate unique code, check it doesn't exist
+    let code, exists = true;
+    while (exists) {
+      code = generateCode();
+      const snap = await db.ref('schedules/' + code).once('value');
+      exists = snap.exists();
+    }
+
+    // Save to Firebase
+    await db.ref('schedules/' + code).set({
+      name: name,
+      code: code,
+      createdAt: Date.now(),
+      selections: [...selected]
+    });
+
+    // Save locally
+    currentUser = { name, code };
+    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
+    showLoggedInState();
+    setSyncStatus('Saved');
+  } catch (err) {
+    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
+    console.error('Create account error:', err);
+  }
+  btn.disabled = false; btn.textContent = 'Create My Schedule';
+}
+
+async function loginWithCode() {
+  const codeInput = document.getElementById('loginCodeInput');
+  const code = codeInput.value.trim().toUpperCase();
+  if (!code) { codeInput.focus(); return; }
+
+  const btn = document.getElementById('loginCodeBtn');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  document.getElementById('loginError').textContent = '';
+
+  try {
+    const snap = await db.ref('schedules/' + code).once('value');
+    if (!snap.exists()) {
+      document.getElementById('loginError').textContent = 'Code not found. Please check and try again.';
+      btn.disabled = false; btn.textContent = 'Retrieve Schedule';
+      return;
+    }
+
+    const data = snap.val();
+    currentUser = { name: data.name, code: code };
+    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
+
+    // Load their selections
+    if (data.selections && Array.isArray(data.selections)) {
+      selected = new Set(data.selections);
+      localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+    }
+
+    showLoggedInState();
+    renderProgram();
+    updateBadge();
+    setSyncStatus('Loaded');
+  } catch (err) {
+    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
+    console.error('Login error:', err);
+  }
+  btn.disabled = false; btn.textContent = 'Retrieve Schedule';
+}
+
+function skipLogin() {
+  document.getElementById('loginOverlay').style.display = 'none';
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('maclean2026_user');
+  document.getElementById('userBar').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginNameInput').value = '';
+  document.getElementById('loginCodeInput').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+function showLoggedInState() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('userBar').style.display = 'flex';
+  document.getElementById('userDisplayName').textContent = currentUser.name;
+  document.getElementById('userDisplayCode').textContent = currentUser.code;
+}
+
+function setSyncStatus(msg) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  if (msg === 'Saving...' || msg === 'Loading...') return;
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+}
+
+// Check if already logged in
+if (currentUser) {
+  showLoggedInState();
+  // Sync from Firebase on load
+  (async () => {
+    try {
+      setSyncStatus('Loading...');
+      const snap = await db.ref('schedules/' + currentUser.code).once('value');
+      if (snap.exists()) {
+        const data = snap.val();
+        if (data.selections && Array.isArray(data.selections)) {
+          selected = new Set(data.selections);
+          localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+          renderProgram();
+          updateBadge();
+        }
+        setSyncStatus('Synced');
+      }
+    } catch (err) {
+      setSyncStatus('Offline');
+      console.error('Sync error:', err);
+    }
+  })();
+}
+
+// ══════════════════════════════════════
+// SAVE & TOGGLE
+// ══════════════════════════════════════
+function save() {
+  localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+  updateBadge();
+  // Sync to Firebase if logged in
+  if (currentUser) {
+    setSyncStatus('Saving...');
+    db.ref('schedules/' + currentUser.code + '/selections').set([...selected])
+      .then(() => setSyncStatus('Saved'))
+      .catch(() => setSyncStatus('Offline'));
+  }
+}
+
+function toggle(id) {
+  if (selected.has(id)) selected.delete(id); else selected.add(id);
+  save();
+  if (currentTab === 'program') renderProgram();
+  else renderMySchedule();
+}
+
+function selectAllInGroup(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  ev.subs.forEach(s => selected.add(s.id));
+  save();
+  renderProgram();
+}
+function deselectAllInGroup(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  ev.subs.forEach(s => selected.delete(s.id));
+  save();
+  renderProgram();
+}
+
+// ══════════════════════════════════════
+// RENDER: Program
+// ══════════════════════════════════════
+function typeLabel(t) {
+  return { plenary:'Plenary', breakout:'Breakout', panel:'Panel', keynote:'Keynote', special:'Special', breakfast:'Small Group' }[t] || t;
+}
+
+function matchesSearch(ev, query) {
+  if (!query) return true;
+  const blob = [ev.title, ev.moderator, ev.location, ...(ev.subs||[]).map(s => s.title + ' ' + s.speaker + ' ' + (s.location||''))].join(' ').toLowerCase();
+  return blob.includes(query);
+}
+
+function renderProgram() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = events.filter(ev => {
+    if (ev.day !== currentDay) return false;
+    if (currentFilter !== 'all' && ev.type !== currentFilter && ev.type !== 'break') return false;
+    return matchesSearch(ev, query);
+  });
+
+  const groups = {};
+  filtered.forEach(ev => {
+    if (!groups[ev.time]) groups[ev.time] = [];
+    groups[ev.time].push(ev);
+  });
+
+  let html = '';
+  for (const time in groups) {
+    html += `<div class="time-block"><div class="time-label">${time}</div>`;
+    groups[time].forEach(ev => {
+      if (ev.type === 'break') {
+        html += `<div class="break-card">${ev.title}${ev.location ? '<div style="font-size:0.8rem;margin-top:2px;">' + ev.location + '</div>' : ''}</div>`;
+        return;
+      }
+
+      // Events WITH subs: show parent as a container, each sub is selectable
+      if (ev.subs && ev.subs.length > 0) {
+        const selectedCount = ev.subs.filter(s => selected.has(s.id)).length;
+        html += `<div class="session-group">`;
+        const hasPanels = ev.subs.some(s => s.title.startsWith('Panel:'));
+        const hasBreakouts = ev.subs.some(s => !s.title.startsWith('Panel:'));
+        if (hasPanels && hasBreakouts) {
+          html += `<span class="session-type type-panel">Panel</span> <span class="session-type type-breakout">Breakout</span>`;
+        } else {
+          html += `<span class="session-type type-${ev.type}">${typeLabel(ev.type)}</span>`;
+        }
+        html += `<div class="group-title">${ev.title}</div>`;
+        html += `<div class="group-meta">${ev.time}${ev.location ? ' &middot; ' + ev.location : ''}</div>`;
+        if (ev.moderator) html += `<div class="group-speaker">${ev.moderator}</div>`;
+        html += `<div class="select-actions">
+          <button class="select-action-btn" onclick="event.stopPropagation();selectAllInGroup('${ev.id}')">Select all</button>
+          ${selectedCount > 0 ? `<button class="select-action-btn" onclick="event.stopPropagation();deselectAllInGroup('${ev.id}')">Clear all</button>` : ''}
+          ${selectedCount > 0 ? `<span style="font-size:0.72rem;color:var(--maroon);font-family:sans-serif;font-weight:600;padding:3px 0;">${selectedCount} selected</span>` : ''}
+        </div>`;
+
+        // Group subs by room if they have room info
+        const hasRooms = ev.subs.some(s => s.room);
+        if (hasRooms) {
+          const roomOrder = [];
+          const roomMap = {};
+          ev.subs.forEach(s => {
+            const r = s.room || 'Other';
+            if (!roomMap[r]) { roomMap[r] = []; roomOrder.push(r); }
+            roomMap[r].push(s);
+          });
+          roomOrder.forEach(room => {
+            // Show room label with first item's full location if it has extra info
+            const firstSub = roomMap[room][0];
+            const firstLoc = firstSub.location;
+            const roomDisplay = firstLoc && firstLoc.length > room.length ? firstLoc : room;
+            const rmMod = firstSub.roomModerator || '';
+            html += `<div class="room-label">${roomDisplay}</div>`;
+            if (rmMod) html += `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:-2px 0 4px;">${rmMod}</div>`;
+            roomMap[room].forEach(sub => {
+              html += renderSubItem(sub);
+            });
+          });
+        } else {
+          html += `<div class="sub-divider"></div>`;
+          ev.subs.forEach(sub => { html += renderSubItem(sub); });
+        }
+        html += `</div>`;
+      } else {
+        // Standalone selectable event (no subs)
+        const isSel = selected.has(ev.id);
+        html += `<div class="standalone-card ${isSel ? 'selected' : ''}" onclick="toggle('${ev.id}')">
+          <div class="item-check">${isSel ? '&#10003;' : ''}</div>
+          <div class="item-content">
+            <span class="session-type type-${ev.type}">${typeLabel(ev.type)}</span>
+            <div class="item-title">${ev.title}</div>
+            <div style="font-size:0.8rem;color:var(--text-light);font-family:sans-serif;margin-top:2px;">${ev.time}${ev.location ? ' &middot; ' + ev.location : ''}</div>
+            ${ev.moderator ? `<div class="item-speaker">${ev.moderator}</div>` : ''}
+          </div>
+        </div>`;
+      }
+    });
+    html += '</div>';
+  }
+
+  if (!html) html = '<div class="empty-state"><div class="icon">&#128269;</div><h3>No sessions found</h3><p>Try adjusting your search or filters.</p></div>';
+  document.getElementById('programList').innerHTML = html;
+}
+
+function renderSubItem(sub) {
+  const isSel = selected.has(sub.id);
+  // Auto-detect panel vs breakout: if title starts with "Panel:" it's a panel
+  const isPanel = sub.title.startsWith('Panel:');
+  const parentEv = events.find(e => (e.subs||[]).some(s => s.id === sub.id));
+  const parentHasMixed = parentEv && parentEv.subs.some(s => s.title.startsWith('Panel:')) && parentEv.subs.some(s => !s.title.startsWith('Panel:'));
+  const showTag = parentHasMixed;
+  const tagHtml = showTag ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}" style="margin-top:4px;">${isPanel ? 'Panel' : 'Breakout'}</span>` : '';
+  return `<div class="selectable-item ${isSel ? 'selected' : ''}" onclick="toggle('${sub.id}')">
+    <div class="item-check">${isSel ? '&#10003;' : ''}</div>
+    <div class="item-content">
+      <div class="item-title">${sub.title}</div>
+      <div class="item-speaker">${sub.speaker}</div>
+      ${tagHtml}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+// RENDER: My Schedule
+// ══════════════════════════════════════
+function renderMySchedule() {
+  if (selected.size === 0) {
+    document.getElementById('myScheduleContent').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">&#128197;</div>
+        <h3>Your schedule is empty</h3>
+        <p>Go to the Program tab and tap on individual presentations you'd like to attend. They'll appear here as your personal schedule.</p>
+        <button class="day-tab" style="margin-top:20px;" onclick="showTab('program')">Browse Program</button>
+      </div>`;
+    return;
+  }
+
+  // Collect all selected items into a flat list with time/day info
+  const items = [];
+  selected.forEach(id => {
+    // Check if it's a sub-item
+    if (subLookup[id]) {
+      const info = subLookup[id];
+      const ev = events.find(e => e.id === info.parentId);
+      const sub = ev.subs.find(s => s.id === id);
+      items.push({
+        id, title: sub.title, speaker: sub.speaker, location: sub.location || ev.location,
+        day: info.day, time: ev.time, sort: info.sort,
+        parentTitle: info.parentTitle, parentType: info.parentType
+      });
+    } else {
+      // Standalone event
+      const ev = events.find(e => e.id === id);
+      if (ev) {
+        items.push({
+          id, title: ev.title, speaker: ev.moderator, location: ev.location,
+          day: ev.day, time: ev.time, sort: ev.sort,
+          parentTitle: '', parentType: ev.type
+        });
+      }
+    }
+  });
+
+  items.sort((a,b) => {
+    if (a.day !== b.day) return a.day === 'friday' ? -1 : 1;
+    return a.sort - b.sort;
+  });
+
+  const fri = items.filter(i => i.day === 'friday');
+  const sat = items.filter(i => i.day === 'saturday');
+
+  let html = '';
+
+  function renderDaySchedule(dayItems, dayLabel) {
+    if (dayItems.length === 0) return '';
+    let h = `<div class="sched-day-header">${dayLabel}</div>`;
+    // Group by time
+    const timeGroups = {};
+    dayItems.forEach(item => {
+      if (!timeGroups[item.time]) timeGroups[item.time] = [];
+      timeGroups[item.time].push(item);
+    });
+    for (const time in timeGroups) {
+      h += `<div class="sched-time-group"><div class="sched-time-label">${time}</div>`;
+      timeGroups[time].forEach(item => {
+        const isPanel = item.title.startsWith('Panel:');
+        const schedTag = item.parentTitle && item.parentTitle.toLowerCase().includes('concurrent')
+          ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}">${isPanel ? 'Panel' : 'Breakout'}</span> `
+          : '';
+        h += `<div class="sched-item">
+          <button class="sched-remove" title="Remove" onclick="toggle('${item.id}');renderMySchedule();">&times;</button>
+          ${schedTag}<div class="sched-item-title" style="${schedTag ? 'display:inline' : ''}">${item.title}</div>
+          ${item.speaker ? `<div class="sched-item-speaker">${item.speaker}</div>` : ''}
+          <div class="sched-item-meta">${item.location || ''}${item.parentTitle ? ' &middot; ' + item.parentTitle : ''}</div>
+        </div>`;
+      });
+      h += '</div>';
+    }
+    return h + '<div style="margin-bottom:24px;"></div>';
+  }
+
+  html += renderDaySchedule(fri, 'Friday, April 10');
+  html += renderDaySchedule(sat, 'Saturday, April 11');
+
+  html += `<div style="text-align:center;margin-top:8px;">
+    <button class="day-tab" onclick="if(confirm('Remove all selections?')){selected.clear();save();renderMySchedule();}" style="border-color:#cc0000;color:#cc0000;font-size:0.82rem;">Clear All</button>
+  </div>`;
+
+  document.getElementById('myScheduleContent').innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// RENDER: Presenters
+// ══════════════════════════════════════
+function renderPresenters() {
+  const query = document.getElementById('presenterSearch').value.toLowerCase();
+  const filtered = presenters.filter(p => !query || (p.name + ' ' + p.affiliation + ' ' + p.role).toLowerCase().includes(query));
+  document.getElementById('presenterList').innerHTML = filtered.map(p => `
+    <div class="presenter-card">
+      <div class="presenter-role">${p.role}</div>
+      <div class="presenter-name">${p.name}</div>
+      <div class="presenter-affiliation">${p.affiliation}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// NAV & FILTERING
+// ══════════════════════════════════════
+function showTab(tab) {
+  currentTab = tab;
+  ['program','schedule','presenters','info'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav button').forEach((btn, i) => {
+    btn.classList.toggle('active', ['program','schedule','presenters','info'][i] === tab);
+  });
+  if (tab === 'schedule') renderMySchedule();
+  if (tab === 'presenters') renderPresenters();
+  if (tab === 'program') renderProgram();
+  document.getElementById('fabBtn').style.display = (tab === 'schedule' || selected.size === 0) ? 'none' : 'block';
+  window.scrollTo(0, 0);
+}
+
+function showDay(day) {
+  currentDay = day;
+  document.querySelectorAll('.day-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(day === 'friday' ? 'fri' : 'sat'));
+  });
+  renderProgram();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderProgram();
+}
+
+function updateBadge() {
+  const count = selected.size;
+  const badge = document.getElementById('schedBadge');
+  const fab = document.getElementById('fabBtn');
+  if (count > 0) {
+    badge.textContent = count; badge.style.display = 'inline';
+    fab.style.display = currentTab === 'schedule' ? 'none' : 'block';
+    fab.textContent = `View My Schedule (${count})`;
+  } else {
+    badge.style.display = 'none'; fab.style.display = 'none';
+  }
+}
+
+// Init
+renderProgram();
+renderPresenters();
+updateBadge();
+
+// Enter key handlers for login inputs
+document.getElementById('loginNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') createNewAccount(); });
+document.getElementById('loginCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') loginWithCode(); });
+</script>
+</body>
+</html>
