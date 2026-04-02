@@ -264,19 +264,19 @@
 
   /* User bar */
   .user-bar {
-    background: rgba(128,0,0,0.08); padding: 6px 16px; display: flex;
-    align-items: center; justify-content: center; gap: 10px;
-    font-size: 0.78rem; font-family: sans-serif; color: var(--maroon);
+    background: rgba(128,0,0,0.08); padding: 14px 20px; display: flex;
+    align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
+    font-size: 0.95rem; font-family: sans-serif; color: var(--maroon);
   }
-  .user-bar .user-name { font-weight: 700; }
-  .user-bar .user-code { font-family: 'Courier New', monospace; letter-spacing: 1px; background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .user-bar .user-name { font-weight: 700; font-size: 1rem; }
+  .user-bar .user-code { font-family: 'Courier New', monospace; letter-spacing: 2px; background: white; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 1.05rem; border: 1px solid var(--border); }
   .user-bar button {
     background: none; border: 1px solid var(--maroon); color: var(--maroon);
-    padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; cursor: pointer;
+    padding: 6px 16px; border-radius: 16px; font-size: 0.82rem; cursor: pointer;
     font-family: sans-serif; font-weight: 600;
   }
   .user-bar button:hover { background: var(--maroon); color: white; }
-  .sync-status { font-size: 0.7rem; color: var(--text-light); }
+  .sync-status { font-size: 0.78rem; color: var(--text-light); }
 </style>
 </head>
 <body>
@@ -297,7 +297,7 @@
   <div class="login-card">
     <div class="shield-lg">&#9883;</div>
     <h2>Welcome to the MacLean Conference</h2>
-    <div class="login-subtitle">Save your schedule and access it from any device</div>
+    <div class="login-subtitle">Use this app to view the MacLean Conference program. To create a personal schedule of the events you wish to attend, enter your name (or a pseudonym if you prefer) and SAVE the unique code that appears near the top of your screen next to your name. Use this code to retrieve your schedule next time you log in.</div>
 
     <div id="loginNewSection">
       <input type="text" id="loginNameInput" placeholder="Enter your name" maxlength="60">
