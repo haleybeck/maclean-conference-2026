@@ -209,6 +209,74 @@
     padding: 3px 10px; border-radius: 4px; display: inline-block; margin: 8px 0 4px; font-family: sans-serif;
     letter-spacing: 0.5px; text-transform: uppercase;
   }
+
+  /* Login Overlay */
+  .login-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--cream); z-index: 1000; display: flex;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: white; border-radius: 16px; padding: 40px 32px;
+    max-width: 420px; width: 100%; text-align: center;
+    border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+  .login-card .shield-lg { font-size: 2.5rem; margin-bottom: 12px; }
+  .login-card h2 { font-size: 1.2rem; color: var(--maroon); margin-bottom: 4px; }
+  .login-card .login-subtitle { font-size: 0.88rem; color: var(--text-light); margin-bottom: 24px; }
+  .login-card input[type="text"] {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px;
+    font-size: 1rem; font-family: 'Georgia', serif; outline: none; transition: border-color 0.2s;
+    text-align: center;
+  }
+  .login-card input[type="text"]:focus { border-color: var(--maroon); }
+  .login-card input[type="text"]::placeholder { color: #bbb; }
+  .login-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: var(--maroon); color: white; font-size: 1rem;
+    font-family: 'Georgia', serif; font-weight: 700; cursor: pointer;
+    margin-top: 12px; transition: background 0.2s;
+  }
+  .login-btn:hover { background: var(--maroon-dark); }
+  .login-btn:disabled { background: #ccc; cursor: default; }
+  .login-divider {
+    display: flex; align-items: center; gap: 12px; margin: 20px 0;
+    font-size: 0.8rem; color: var(--text-light); font-family: sans-serif;
+  }
+  .login-divider::before, .login-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .login-code-input {
+    width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px;
+    font-size: 1.1rem; font-family: 'Courier New', monospace; outline: none;
+    text-align: center; letter-spacing: 3px; text-transform: uppercase;
+    transition: border-color 0.2s;
+  }
+  .login-code-input:focus { border-color: var(--maroon); }
+  .login-code-input::placeholder { letter-spacing: 0; font-size: 0.9rem; font-family: 'Georgia', serif; }
+  .login-error { color: #cc0000; font-size: 0.82rem; margin-top: 8px; font-family: sans-serif; min-height: 20px; }
+  .login-skip {
+    background: none; border: none; color: var(--text-light); font-size: 0.82rem;
+    cursor: pointer; margin-top: 16px; font-family: sans-serif; text-decoration: underline;
+  }
+  .login-skip:hover { color: var(--text); }
+
+  /* User bar */
+  .user-bar {
+    background: rgba(128,0,0,0.08); padding: 6px 16px; display: flex;
+    align-items: center; justify-content: center; gap: 10px;
+    font-size: 0.78rem; font-family: sans-serif; color: var(--maroon);
+  }
+  .user-bar .user-name { font-weight: 700; }
+  .user-bar .user-code { font-family: 'Courier New', monospace; letter-spacing: 1px; background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .user-bar button {
+    background: none; border: 1px solid var(--maroon); color: var(--maroon);
+    padding: 2px 10px; border-radius: 12px; font-size: 0.72rem; cursor: pointer;
+    font-family: sans-serif; font-weight: 600;
+  }
+  .user-bar button:hover { background: var(--maroon); color: white; }
+  .sync-status { font-size: 0.7rem; color: var(--text-light); }
 </style>
 </head>
 <body>
@@ -222,6 +290,38 @@
     </div>
   </div>
   <div class="subtitle">April 10–11, 2026 &middot; David Rubenstein Forum, University of Chicago</div>
+</div>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="shield-lg">&#9883;</div>
+    <h2>Welcome to the MacLean Conference</h2>
+    <div class="login-subtitle">Save your schedule and access it from any device</div>
+
+    <div id="loginNewSection">
+      <input type="text" id="loginNameInput" placeholder="Enter your name" maxlength="60">
+      <button class="login-btn" id="loginNewBtn" onclick="createNewAccount()">Create My Schedule</button>
+    </div>
+
+    <div class="login-divider">or retrieve an existing schedule</div>
+
+    <div id="loginCodeSection">
+      <input type="text" class="login-code-input" id="loginCodeInput" placeholder="Enter your code" maxlength="8">
+      <button class="login-btn" id="loginCodeBtn" onclick="loginWithCode()" style="background:white;color:var(--maroon);border:2px solid var(--maroon);">Retrieve Schedule</button>
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+    <button class="login-skip" onclick="skipLogin()">Continue without saving</button>
+  </div>
+</div>
+
+<!-- USER BAR (shown when logged in) -->
+<div class="user-bar" id="userBar" style="display:none;">
+  <span>Signed in as <span class="user-name" id="userDisplayName"></span></span>
+  <span class="user-code" id="userDisplayCode"></span>
+  <span class="sync-status" id="syncStatus"></span>
+  <button onclick="logout()">Sign Out</button>
 </div>
 
 <div class="nav" id="mainNav">
@@ -317,7 +417,26 @@
 
 <button class="fab" id="fabBtn" onclick="showTab('schedule')">View My Schedule</button>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
+// ══════════════════════════════════════
+// FIREBASE SETUP
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAIXslw1WQTCpO-f2Hie8KQlGQHQ2AzBzI",
+  authDomain: "maclean-conference-2026.firebaseapp.com",
+  projectId: "maclean-conference-2026",
+  storageBucket: "maclean-conference-2026.firebasestorage.app",
+  messagingSenderId: "1077972310615",
+  appId: "1:1077972310615:web:1b74a75fcb0ffc3a50e112",
+  databaseURL: "https://maclean-conference-2026-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ══════════════════════════════════════
 // DATA: Each item in `events` is a time-slot group.
 // Items with `subs` contain individually selectable presentations.
@@ -571,13 +690,168 @@ const presenters = [
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
-// selected stores individual item IDs (sub-item IDs or standalone event IDs)
 let selected = new Set(JSON.parse(localStorage.getItem('maclean2026_v2') || '[]'));
 let currentDay = 'friday';
 let currentFilter = 'all';
 let currentTab = 'program';
 
-function save() { localStorage.setItem('maclean2026_v2', JSON.stringify([...selected])); updateBadge(); }
+// User session
+let currentUser = JSON.parse(localStorage.getItem('maclean2026_user') || 'null');
+// { name: "...", code: "XXXX" }
+
+// ══════════════════════════════════════
+// LOGIN / ACCOUNT SYSTEM
+// ══════════════════════════════════════
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function createNewAccount() {
+  const nameInput = document.getElementById('loginNameInput');
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+
+  const btn = document.getElementById('loginNewBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  document.getElementById('loginError').textContent = '';
+
+  try {
+    // Generate unique code, check it doesn't exist
+    let code, exists = true;
+    while (exists) {
+      code = generateCode();
+      const snap = await db.ref('schedules/' + code).once('value');
+      exists = snap.exists();
+    }
+
+    // Save to Firebase
+    await db.ref('schedules/' + code).set({
+      name: name,
+      code: code,
+      createdAt: Date.now(),
+      selections: [...selected]
+    });
+
+    // Save locally
+    currentUser = { name, code };
+    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
+    showLoggedInState();
+    setSyncStatus('Saved');
+  } catch (err) {
+    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
+    console.error('Create account error:', err);
+  }
+  btn.disabled = false; btn.textContent = 'Create My Schedule';
+}
+
+async function loginWithCode() {
+  const codeInput = document.getElementById('loginCodeInput');
+  const code = codeInput.value.trim().toUpperCase();
+  if (!code) { codeInput.focus(); return; }
+
+  const btn = document.getElementById('loginCodeBtn');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  document.getElementById('loginError').textContent = '';
+
+  try {
+    const snap = await db.ref('schedules/' + code).once('value');
+    if (!snap.exists()) {
+      document.getElementById('loginError').textContent = 'Code not found. Please check and try again.';
+      btn.disabled = false; btn.textContent = 'Retrieve Schedule';
+      return;
+    }
+
+    const data = snap.val();
+    currentUser = { name: data.name, code: code };
+    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
+
+    // Load their selections
+    if (data.selections && Array.isArray(data.selections)) {
+      selected = new Set(data.selections);
+      localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+    }
+
+    showLoggedInState();
+    renderProgram();
+    updateBadge();
+    setSyncStatus('Loaded');
+  } catch (err) {
+    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
+    console.error('Login error:', err);
+  }
+  btn.disabled = false; btn.textContent = 'Retrieve Schedule';
+}
+
+function skipLogin() {
+  document.getElementById('loginOverlay').style.display = 'none';
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('maclean2026_user');
+  document.getElementById('userBar').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginNameInput').value = '';
+  document.getElementById('loginCodeInput').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+function showLoggedInState() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('userBar').style.display = 'flex';
+  document.getElementById('userDisplayName').textContent = currentUser.name;
+  document.getElementById('userDisplayCode').textContent = currentUser.code;
+}
+
+function setSyncStatus(msg) {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  if (msg === 'Saving...' || msg === 'Loading...') return;
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+}
+
+// Check if already logged in
+if (currentUser) {
+  showLoggedInState();
+  // Sync from Firebase on load
+  (async () => {
+    try {
+      setSyncStatus('Loading...');
+      const snap = await db.ref('schedules/' + currentUser.code).once('value');
+      if (snap.exists()) {
+        const data = snap.val();
+        if (data.selections && Array.isArray(data.selections)) {
+          selected = new Set(data.selections);
+          localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+          renderProgram();
+          updateBadge();
+        }
+        setSyncStatus('Synced');
+      }
+    } catch (err) {
+      setSyncStatus('Offline');
+      console.error('Sync error:', err);
+    }
+  })();
+}
+
+// ══════════════════════════════════════
+// SAVE & TOGGLE
+// ══════════════════════════════════════
+function save() {
+  localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+  updateBadge();
+  // Sync to Firebase if logged in
+  if (currentUser) {
+    setSyncStatus('Saving...');
+    db.ref('schedules/' + currentUser.code + '/selections').set([...selected])
+      .then(() => setSyncStatus('Saved'))
+      .catch(() => setSyncStatus('Offline'));
+  }
+}
 
 function toggle(id) {
   if (selected.has(id)) selected.delete(id); else selected.add(id);
@@ -875,6 +1149,10 @@ function updateBadge() {
 renderProgram();
 renderPresenters();
 updateBadge();
+
+// Enter key handlers for login inputs
+document.getElementById('loginNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') createNewAccount(); });
+document.getElementById('loginCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') loginWithCode(); });
 </script>
 </body>
 </html>
