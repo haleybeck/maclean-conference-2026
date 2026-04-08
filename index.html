@@ -306,6 +306,50 @@
   }
   .user-bar button:hover { background: var(--maroon); color: white; }
   .sync-status { font-size: 0.78rem; color: var(--text-light); }
+
+  /* Generic modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 150; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: white; border-radius: 12px; max-width: 500px; width: 100%;
+    max-height: 90vh; overflow-y: auto; padding: 28px 26px;
+    border-top: 6px solid var(--maroon); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal-card h3 { color: var(--maroon); font-size: 1.15rem; margin-bottom: 8px; }
+  .modal-card .modal-sub { font-size: 0.9rem; color: var(--text-light); margin-bottom: 18px; }
+  .modal-card select, .modal-card textarea {
+    width: 100%; font-family: 'Georgia', serif; font-size: 0.95rem;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+    background: white; color: var(--text); margin-bottom: 14px;
+  }
+  .modal-card textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+  .modal-card select:focus, .modal-card textarea:focus { outline: none; border-color: var(--maroon); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  .modal-btn {
+    font-family: sans-serif; font-size: 0.88rem; font-weight: 600;
+    padding: 9px 18px; border-radius: 20px; border: 1px solid var(--maroon);
+    background: white; color: var(--maroon); cursor: pointer;
+  }
+  .modal-btn:hover { background: var(--maroon); color: white; }
+  .modal-btn.primary { background: var(--maroon); color: white; }
+  .modal-btn.primary:hover { background: var(--maroon-dark); }
+  .modal-btn.ghost { border-color: var(--border); color: var(--text-light); }
+  .presenter-card { cursor: pointer; }
+  .presenter-card:hover { border-color: var(--maroon); box-shadow: 0 2px 8px rgba(128,0,0,0.12); }
+  .presenter-you {
+    display: inline-block; font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 8px;
+    border-radius: 4px; margin-left: 6px; background: var(--gold); color: var(--maroon-dark);
+    font-family: 'Helvetica Neue', Arial, sans-serif; vertical-align: middle;
+  }
+  .presenter-bio-preview {
+    font-size: 0.82rem; color: var(--text); margin-top: 8px;
+    line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
 </style>
 </head>
 <body>
@@ -361,6 +405,37 @@
     </details>
 
     <button class="login-skip" onclick="skipLogin()">Continue without saving</button>
+  </div>
+</div>
+
+<!-- CLAIM PRESENTER MODAL -->
+<div class="modal-overlay" id="claimModal">
+  <div class="modal-card">
+    <h3>Are you a presenter?</h3>
+    <div class="modal-sub">If you are speaking, moderating, or serving on a panel at this conference, select your name below to claim your presenter profile. You'll be able to add a bio that other attendees can see on the Presenters page.</div>
+    <select id="claimSelect"><option value="">— Select your name —</option></select>
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="declinePresenterClaim()">I'm not a presenter</button>
+      <button class="modal-btn primary" id="claimConfirmBtn" onclick="confirmPresenterClaim()">Claim profile</button>
+    </div>
+    <div class="login-error" id="claimError"></div>
+  </div>
+</div>
+
+<!-- PRESENTER DETAIL MODAL -->
+<div class="modal-overlay" id="presenterModal">
+  <div class="modal-card">
+    <div id="presenterModalRole" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--maroon-light);margin-bottom:4px;"></div>
+    <h3 id="presenterModalName" style="font-size:1.25rem;margin-bottom:4px;"></h3>
+    <div id="presenterModalAffil" style="font-size:0.9rem;color:var(--text-light);font-style:italic;margin-bottom:16px;"></div>
+    <div id="presenterModalBioView" style="font-size:0.95rem;line-height:1.6;color:var(--text);white-space:pre-wrap;margin-bottom:16px;"></div>
+    <textarea id="presenterModalBioEdit" placeholder="Write a short bio (a few sentences about your background, affiliations, and interests)..." style="display:none;" maxlength="2000"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="closePresenterModal()">Close</button>
+      <button class="modal-btn" id="presenterModalEditBtn" onclick="startEditBio()" style="display:none;">Edit bio</button>
+      <button class="modal-btn primary" id="presenterModalSaveBtn" onclick="saveBio()" style="display:none;">Save bio</button>
+    </div>
+    <div class="login-error" id="presenterModalError"></div>
   </div>
 </div>
 
@@ -551,21 +626,11 @@ const events = [
   { id: "f-lunch", day: "friday", time: "12:00 pm", sort: 1200, title: "Lunch", type: "break", location: "University Room AB", moderator: "", subs: [] },
   {
     id: "f-conc1", day: "friday", time: "1:00 pm", sort: 1300,
-    title: "Concurrent Panel Sessions & Breakout Sessions", type: "panel",
+    title: "Concurrent Panel Sessions", type: "panel",
     location: "", moderator: "",
     subs: [
-      { id: "f-c1-1", title: "Panel: Moral Distress in Genetic Counseling Imposed by Colleagues and Patients", speaker: "Jay Moore, MS, CGC; Darcy Huismann, MS, CGC; Justin Horn, PhD; Yazmin Enchautegui-Colon, MD", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
-      { id: "f-c1-2", title: "Panel: Career Fear and Care Deferred — Ethical, Evidence-Based Analysis of Barriers to Physician Mental Health and Suicide Prevention", speaker: "Val Bellman, MD, PsyD; Eden Nohra, MD", location: "Room 504", room: "Room 504" },
-      { id: "f-c1-3", title: "Bereavement Birth Planning: A Framework for Death at the Beginning of Life", speaker: "Luke Gatta, MD; Allison M. McCarthy, PhD", location: "Room 502 — Pediatrics & Birth Planning", room: "Room 502", roomModerator: "Moderator: Deborah Loeff, MD" },
-      { id: "f-c1-4", title: "Best Interest and Substituted Judgment in Situations without Temporal Urgency", speaker: "Arnav Shandilya, BS", location: "Room 502", room: "Room 502" },
-      { id: "f-c1-5", title: "Improving Guardianship Decisions Using a Patient Centered Algorithm", speaker: "Kimberly Martin, DNP, APN-C", location: "Room 502", room: "Room 502" },
-      { id: "f-c1-6", title: "Preserving Autonomy for Patients with Intellectual Disabilities: Perspectives from Daoist Ethics", speaker: "L. August Yu, MA", location: "Room 503 — Autonomy & Decision-Making", room: "Room 503", roomModerator: "Moderator: Rebecca Propper, MD" },
-      { id: "f-c1-7", title: "Autonomy and Its Limits: Reimagining Ethical Engagement Through Shared Decision-Making", speaker: "Mary Simmerling, PhD", location: "Room 503", room: "Room 503" },
-      { id: "f-c1-8", title: "The Quality-of-Life Directive: A Patient-Centered Approach to Advance Planning", speaker: "Julie L. Campbell, JD, LLM, CHC", location: "Room 503", room: "Room 503" },
-      { id: "f-c1-9", title: "Patterns of Life-Sustaining, Potentially Non-Beneficial Treatment and the Role of Palliative Care in Critically Ill Patients", speaker: "Ellen Cohn, MD, MPH", location: "Room 504 — Ethical Consistency & Justice in Critical Care", room: "Room 504B", roomModerator: "Moderator: Darren Bryan, MD" },
-      { id: "f-c1-10", title: "Honoring DNR Orders After Suicide Attempts: A Consistent-Preference Approach", speaker: "Charley D. Maples, PhD", location: "Room 504", room: "Room 504B" },
-      { id: "f-c1-11", title: "Inconsistencies in Informed Consent Practices During Critical Care Withdrawal", speaker: "Daniel Fu, MS", location: "Room 504", room: "Room 504B" },
-      { id: "f-c1-12", title: "Whose Justice? Which Distributive Theory?: Contractualism, Organs, and Allocative Justice", speaker: "Bharat Ranganathan, PhD, HEC-C; Karlie Zychowski, MD", location: "Room 504", room: "Room 504B" }
+      { id: "f-c1-1", title: "Moral Distress in Genetic Counseling Imposed by Colleagues and Patients", speaker: "Jay Moore, MS, CGC; Darcy Huismann, MS, CGC; Justin Horn, PhD; Yazmin Enchautegui-Colon, MD", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
+      { id: "f-c1-2", title: "Career Fear and Care Deferred: Ethical, Evidence-Based Analysis of Barriers to Physician Mental Health and Suicide Prevention", speaker: "Val Bellman, MD, PsyD; Eden Nohra, MD", location: "Room 504", room: "Room 504" }
     ]
   },
   { id: "f-break2", day: "friday", time: "1:45 pm", sort: 1345, title: "Break", type: "break", location: "", moderator: "", subs: [] },
@@ -574,18 +639,28 @@ const events = [
     title: "Concurrent Panel Sessions", type: "panel",
     location: "", moderator: "",
     subs: [
-      { id: "f-c2-1", title: "Panel: Stop! Don't Intubate! DNR/DNI in the Setting of Refractory Psychiatric Illness", speaker: "Braylee Grisel, MD; Rebecca Propper, MD; Gregg Robbins-Welty, MD, MS, HEC-C; Nathan Scheiner, MD, MA", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
-      { id: "f-c2-2", title: "Panel: Imagining Oral Health Justice — Reimagining Professionalism and Missional Ethics in Dental Practice", speaker: "Carlos S. Smith, DDS, MDiv; Francine D. Lynch, JD, DBioethics", location: "Room 504", room: "Room 504" }
+      { id: "f-c2-1", title: "Stop! Don't Intubate! DNR/DNI in the Setting of Refractory Psychiatric Illness", speaker: "Braylee Grisel, MD; Rebecca Propper, MD; Gregg Robbins-Welty, MD, MS, HEC-C; Nathan Scheiner, MD, MA", location: "Friedman Hall (Auditorium)", room: "Friedman Hall (Auditorium)" },
+      { id: "f-c2-2", title: "Imagining Oral Health Justice: Reimagining Professionalism and Missional Ethics in Dental Practice", speaker: "Carlos S. Smith, DDS, MDiv; Francine D. Lynch, JD, DBioethics", location: "Room 504", room: "Room 504" }
     ]
   },
   { id: "f-break3", day: "friday", time: "2:45 pm", sort: 1445, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
   {
     id: "f-bo315", day: "friday", time: "3:15 pm", sort: 1515,
     title: "Concurrent Breakout Sessions", type: "breakout",
-    location: "Room 501", moderator: "Moderator: Will Parker, MD, PhD",
+    location: "", moderator: "",
     subs: [
-      { id: "f-bo3-1", title: "Ethical Triage in the ER: The Role of Clinical Ethicists in Emergency Departments", speaker: "Kimberly Vargas Barreto, PhD", location: "Room 501 — Emergency & Critical Care Ethics", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" },
-      { id: "f-bo3-2", title: "A Targeted Needs Assessment of End-of-Life Conversation Training in Pediatric Emergency Medicine Fellowship Programs", speaker: "Jacob Schulman, MD, MHPE", location: "Room 501", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" }
+      { id: "f-bo3-1", title: "Ethical Triage in the ER: The Role of Clinical Ethicists in Emergency Departments", speaker: "Kimberly Vargas Barreto, PhD", location: "Room 501 — Emergency & Critical Care Ethics", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics", roomModerator: "Moderator: Will Parker, MD, PhD" },
+      { id: "f-bo3-2", title: "A Targeted Needs Assessment of End-of-Life Conversation Training in Pediatric Emergency Medicine Fellowship Programs", speaker: "Jacob Schulman, MD, MHPE", location: "Room 501", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" },
+      { id: "f-c1-9", title: "Patterns of Life-Sustaining, Potentially Non-Beneficial Treatment and the Role of Palliative Care in Critically Ill Patients", speaker: "Ellen Cohn, MD, MPH", location: "Room 501", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" },
+      { id: "f-c1-3", title: "Bereavement Birth Planning: A Framework for Death at the Beginning of Life", speaker: "Luke Gatta, MD; Allison M. McCarthy, PhD", location: "Room 502 — Pediatrics & Birth Planning", room: "Room 502", roomTopic: "Pediatrics & Birth Planning", roomModerator: "Moderator: Deborah Loeff, MD" },
+      { id: "f-c1-4", title: "Best Interest and Substituted Judgment in Situations without Temporal Urgency", speaker: "Arnav Shandilya, BS", location: "Room 502", room: "Room 502", roomTopic: "Pediatrics & Birth Planning" },
+      { id: "f-c1-5", title: "Improving Guardianship Decisions Using a Patient Centered Algorithm", speaker: "Kimberly Martin, DNP, APN-C", location: "Room 502", room: "Room 502", roomTopic: "Pediatrics & Birth Planning" },
+      { id: "f-c1-6", title: "Preserving Autonomy for Patients with Intellectual Disabilities: Perspectives from Daoist Ethics", speaker: "L. August Yu, MA", location: "Room 503 — Autonomy & Decision-Making", room: "Room 503", roomTopic: "Autonomy & Decision-Making", roomModerator: "Moderator: Rebecca Propper, MD" },
+      { id: "f-c1-7", title: "Autonomy and Its Limits: Reimagining Ethical Engagement Through Shared Decision-Making", speaker: "Mary Simmerling, PhD", location: "Room 503", room: "Room 503", roomTopic: "Autonomy & Decision-Making" },
+      { id: "f-c1-8", title: "The Quality-of-Life Directive: A Patient-Centered Approach to Advance Planning", speaker: "Julie L. Campbell, JD, LLM, CHC", location: "Room 503", room: "Room 503", roomTopic: "Autonomy & Decision-Making" },
+      { id: "f-c1-10", title: "Honoring DNR Orders After Suicide Attempts: A Consistent-Preference Approach", speaker: "Charley D. Maples, PhD", location: "Room 504 — Ethical Consistency & Justice in Critical Care", room: "Room 504B", roomTopic: "Ethical Consistency & Justice in Critical Care", roomModerator: "Moderator: Darren Bryan, MD" },
+      { id: "f-c1-11", title: "Inconsistencies in Informed Consent Practices During Critical Care Withdrawal", speaker: "Daniel Fu, MS", location: "Room 504", room: "Room 504B", roomTopic: "Ethical Consistency & Justice in Critical Care" },
+      { id: "f-c1-12", title: "Whose Justice? Which Distributive Theory?: Contractualism, Organs, and Allocative Justice", speaker: "Bharat Ranganathan, PhD, HEC-C; Karlie Zychowski, MD", location: "Room 504", room: "Room 504B", roomTopic: "Ethical Consistency & Justice in Critical Care" }
     ]
   },
   { id: "f-adjourn", day: "friday", time: "4:30 pm", sort: 1630, title: "Adjourn", type: "break", location: "", moderator: "", subs: [] },
@@ -946,6 +1021,8 @@ async function bootstrapUser(user) {
     const snap = await ref.once('value');
     if (snap.exists()) {
       const data = snap.val();
+      if (data.presenterSlug) currentUser.presenterSlug = data.presenterSlug;
+      if (data.presenterDeclined) currentUser.presenterDeclined = true;
       if (Array.isArray(data.selections)) {
         const before = JSON.stringify([...data.selections].sort());
         selected = normalizeSelections(data.selections);
@@ -970,6 +1047,9 @@ async function bootstrapUser(user) {
     setSyncStatus('Synced');
     // If user entered an old code in the migration field, import it now
     await maybeMigrateOldCode(uid);
+    // Load presenter claims (community data) and prompt to claim profile if applicable
+    await loadPresenterClaims();
+    maybePromptPresenterClaim();
   } catch (err) {
     setSyncStatus('Offline');
     console.error('Bootstrap error:', err);
@@ -1142,13 +1222,17 @@ function renderProgram() {
               const targetId = firstSub.id;
               const parentMixed = ev.subs.some(s => s.title.startsWith('Panel:')) && ev.subs.some(s => !s.title.startsWith('Panel:'));
               const tagMarkup = parentMixed ? `<span class="sub-type-tag sub-tag-breakout" style="margin-bottom:6px;">Breakout</span>` : '';
-              const hideRoomHeader = ev.type === 'breakout' && roomOrder.length === 1;
+              // Room label sits above the card, matching the single-sub layout.
+              // Strip internal disambiguation suffix (e.g. "504B" -> "504").
+              const roomLabel = room.replace(/([0-9])[A-Za-z]$/, '$1');
+              html += `<div class="room-label">${roomLabel}</div>`;
+              const topic = firstSub.roomTopic || deriveRoomTopic(firstSub) || '';
               html += `<div class="selectable-item ${roomSelected ? 'selected' : ''}" onclick="toggle('${targetId}')" style="flex-direction:row;align-items:flex-start;">
                 <div class="item-check">${roomSelected ? '&#10003;' : ''}</div>
                 <div class="item-content">
                   ${tagMarkup}
-                  <div class="item-title" style="color:var(--maroon);text-transform:uppercase;font-size:0.78rem;letter-spacing:1px;">${hideRoomHeader ? (firstSub.roomTopic || roomDisplay) : roomDisplay}</div>
-                  ${rmMod && !hideRoomHeader ? `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:4px 0 6px;">${rmMod}</div>` : ''}
+                  ${topic ? `<div class="item-title" style="color:var(--maroon);">${topic}</div>` : ''}
+                  ${rmMod ? `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:4px 0 6px;">${rmMod}</div>` : ''}
                   <div style="margin-top:6px;">
                     ${roomMap[room].map(sub => `
                       <div style="padding:6px 0;border-top:1px dashed var(--border);">
@@ -1625,17 +1709,149 @@ function exportToCalendar() {
 }
 
 // ══════════════════════════════════════
+// PRESENTER CLAIMS & BIOS
+// ══════════════════════════════════════
+let presenterClaims = {}; // slug -> { uid, bio, claimedAt }
+function presenterSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function loadPresenterClaims() {
+  try {
+    const snap = await db.ref('presenterClaims').once('value');
+    presenterClaims = snap.val() || {};
+  } catch (e) { presenterClaims = {}; }
+  renderPresenters();
+}
+function maybePromptPresenterClaim() {
+  if (!currentUser || !currentUser.uid) return;
+  // Already claimed or declined
+  if (currentUser.presenterSlug || currentUser.presenterDeclined) return;
+  // Check if any presenter is already claimed by this uid
+  const mine = Object.entries(presenterClaims).find(([_, c]) => c && c.uid === currentUser.uid);
+  if (mine) {
+    currentUser.presenterSlug = mine[0];
+    return;
+  }
+  const sel = document.getElementById('claimSelect');
+  sel.innerHTML = '<option value="">— Select your name —</option>' +
+    presenters
+      .filter(p => !presenterClaims[presenterSlug(p.name)] || !presenterClaims[presenterSlug(p.name)].uid)
+      .map(p => `<option value="${presenterSlug(p.name)}">${escapeHtml(p.name)} — ${escapeHtml(p.affiliation)}</option>`)
+      .join('');
+  document.getElementById('claimError').textContent = '';
+  document.getElementById('claimModal').classList.add('open');
+}
+async function confirmPresenterClaim() {
+  const slug = document.getElementById('claimSelect').value;
+  const errEl = document.getElementById('claimError');
+  if (!slug) { errEl.textContent = 'Please select your name from the list.'; return; }
+  if (!currentUser || !currentUser.uid) { errEl.textContent = 'You must be signed in.'; return; }
+  const btn = document.getElementById('claimConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Claiming...';
+  try {
+    const existing = (await db.ref('presenterClaims/' + slug).once('value')).val();
+    if (existing && existing.uid && existing.uid !== currentUser.uid) {
+      errEl.textContent = 'That profile has already been claimed. Please contact the conference organizers if this is an error.';
+      btn.disabled = false; btn.textContent = 'Claim profile';
+      return;
+    }
+    await db.ref('presenterClaims/' + slug).set({
+      uid: currentUser.uid,
+      bio: (existing && existing.bio) || '',
+      claimedAt: Date.now()
+    });
+    await db.ref('users/' + currentUser.uid + '/presenterSlug').set(slug);
+    currentUser.presenterSlug = slug;
+    presenterClaims[slug] = { uid: currentUser.uid, bio: (existing && existing.bio) || '', claimedAt: Date.now() };
+    document.getElementById('claimModal').classList.remove('open');
+    renderPresenters();
+  } catch (e) {
+    errEl.textContent = 'Could not save. Please try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Claim profile';
+}
+async function declinePresenterClaim() {
+  document.getElementById('claimModal').classList.remove('open');
+  if (currentUser && currentUser.uid) {
+    currentUser.presenterDeclined = true;
+    try { await db.ref('users/' + currentUser.uid + '/presenterDeclined').set(true); } catch (e) {}
+  }
+}
+let openPresenterSlug = null;
+function openPresenterModal(slug) {
+  const p = presenters.find(x => presenterSlug(x.name) === slug);
+  if (!p) return;
+  openPresenterSlug = slug;
+  const claim = presenterClaims[slug] || {};
+  const isOwner = currentUser && currentUser.uid && claim.uid === currentUser.uid;
+  document.getElementById('presenterModalRole').textContent = p.role || '';
+  document.getElementById('presenterModalName').innerHTML = escapeHtml(p.name) + (isOwner ? ' <span class="presenter-you">You</span>' : '');
+  document.getElementById('presenterModalAffil').textContent = p.affiliation || '';
+  const bio = (claim.bio || '').trim();
+  const viewEl = document.getElementById('presenterModalBioView');
+  viewEl.textContent = bio || (isOwner ? 'You haven\u2019t added a bio yet. Click "Edit bio" to share one with attendees.' : 'No bio provided.');
+  viewEl.style.color = bio ? 'var(--text)' : 'var(--text-light)';
+  viewEl.style.fontStyle = bio ? 'normal' : 'italic';
+  viewEl.style.display = 'block';
+  document.getElementById('presenterModalBioEdit').style.display = 'none';
+  document.getElementById('presenterModalBioEdit').value = bio;
+  document.getElementById('presenterModalEditBtn').style.display = isOwner ? 'inline-block' : 'none';
+  document.getElementById('presenterModalSaveBtn').style.display = 'none';
+  document.getElementById('presenterModalError').textContent = '';
+  document.getElementById('presenterModal').classList.add('open');
+}
+function closePresenterModal() {
+  document.getElementById('presenterModal').classList.remove('open');
+  openPresenterSlug = null;
+}
+function startEditBio() {
+  document.getElementById('presenterModalBioView').style.display = 'none';
+  document.getElementById('presenterModalBioEdit').style.display = 'block';
+  document.getElementById('presenterModalEditBtn').style.display = 'none';
+  document.getElementById('presenterModalSaveBtn').style.display = 'inline-block';
+  document.getElementById('presenterModalBioEdit').focus();
+}
+async function saveBio() {
+  if (!openPresenterSlug || !currentUser || !currentUser.uid) return;
+  const bio = document.getElementById('presenterModalBioEdit').value.trim();
+  const btn = document.getElementById('presenterModalSaveBtn');
+  const errEl = document.getElementById('presenterModalError');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    await db.ref('presenterClaims/' + openPresenterSlug + '/bio').set(bio);
+    presenterClaims[openPresenterSlug] = presenterClaims[openPresenterSlug] || {};
+    presenterClaims[openPresenterSlug].bio = bio;
+    renderPresenters();
+    // Refresh modal view state
+    openPresenterModal(openPresenterSlug);
+  } catch (e) {
+    errEl.textContent = 'Could not save. Please try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Save bio';
+}
+
+// ══════════════════════════════════════
 // RENDER: Presenters
 // ══════════════════════════════════════
 function renderPresenters() {
   const query = document.getElementById('presenterSearch').value.toLowerCase();
   const filtered = presenters.filter(p => !query || (p.name + ' ' + p.affiliation + ' ' + p.role).toLowerCase().includes(query));
-  document.getElementById('presenterList').innerHTML = filtered.map(p => `
-    <div class="presenter-card">
-      <div class="presenter-role">${p.role}</div>
-      <div class="presenter-name">${p.name}</div>
-      <div class="presenter-affiliation">${p.affiliation}</div>
-    </div>`).join('');
+  document.getElementById('presenterList').innerHTML = filtered.map(p => {
+    const slug = presenterSlug(p.name);
+    const claim = presenterClaims[slug] || {};
+    const isOwner = currentUser && currentUser.uid && claim.uid === currentUser.uid;
+    const bio = (claim.bio || '').trim();
+    return `
+    <div class="presenter-card" onclick="openPresenterModal('${slug}')">
+      <div class="presenter-role">${escapeHtml(p.role)}</div>
+      <div class="presenter-name">${escapeHtml(p.name)}${isOwner ? ' <span class="presenter-you">You</span>' : ''}</div>
+      <div class="presenter-affiliation">${escapeHtml(p.affiliation)}</div>
+      ${bio ? `<div class="presenter-bio-preview">${escapeHtml(bio)}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════
@@ -1687,6 +1903,7 @@ function updateBadge() {
 renderProgram();
 renderPresenters();
 updateBadge();
+loadPresenterClaims();
 
 // Enter key handlers for login inputs
 ['loginEmailInput','loginPasswordInput'].forEach(id => {
