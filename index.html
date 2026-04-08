@@ -225,13 +225,42 @@
   .login-card .shield-lg { font-size: 2.5rem; margin-bottom: 12px; }
   .login-card h2 { font-size: 1.2rem; color: var(--maroon); margin-bottom: 4px; }
   .login-card .login-subtitle { font-size: 0.88rem; color: var(--text-light); margin-bottom: 24px; }
-  .login-card input[type="text"] {
+  .login-card input[type="text"], .login-card input[type="email"], .login-card input[type="password"] {
     width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px;
     font-size: 1rem; font-family: 'Georgia', serif; outline: none; transition: border-color 0.2s;
     text-align: center;
   }
-  .login-card input[type="text"]:focus { border-color: var(--maroon); }
-  .login-card input[type="text"]::placeholder { color: #bbb; }
+  .login-card input:focus { border-color: var(--maroon); outline: none; }
+  .login-card input::placeholder { color: #bbb; }
+  .login-card input[type="email"], .login-card input[type="password"] {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.95rem; font-family: sans-serif;
+    margin-bottom: 10px; box-sizing: border-box;
+  }
+  .google-btn {
+    background: white; color: #3c4043; border: 1px solid #dadce0;
+    padding: 11px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; width: 100%; font-family: sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .google-btn svg { width: 18px; height: 18px; }
+  .login-toggle {
+    background: none; border: none; color: var(--maroon); font-size: 0.85rem;
+    cursor: pointer; margin-top: 10px; font-family: sans-serif; text-decoration: underline;
+  }
+  .migrate-section {
+    margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);
+    text-align: left;
+  }
+  .migrate-section summary {
+    cursor: pointer; font-size: 0.82rem; color: var(--text-light);
+    font-family: sans-serif; text-align: center;
+  }
+  .migrate-section .hint {
+    font-size: 0.78rem; color: var(--text-light); margin: 8px 0;
+    font-family: sans-serif;
+  }
   .login-btn {
     width: 100%; padding: 14px; border: none; border-radius: 10px;
     background: var(--maroon); color: white; font-size: 1rem;
@@ -297,21 +326,40 @@
   <div class="login-card">
     <div class="shield-lg">&#9883;</div>
     <h2>Welcome to the MacLean Conference</h2>
-    <div class="login-subtitle">Use this app to view the MacLean Conference program. To create a personal schedule of the events you wish to attend, enter your name (or a pseudonym if you prefer) and SAVE the unique code that appears near the top of your screen next to your name. Use this code to retrieve your schedule next time you log in.</div>
+    <div class="login-subtitle" id="loginSubtitle">Sign in to build a personal schedule of the events you wish to attend. Your schedule will sync across your devices.</div>
 
-    <div id="loginNewSection">
-      <input type="text" id="loginNameInput" placeholder="Enter your name" maxlength="60">
-      <button class="login-btn" id="loginNewBtn" onclick="createNewAccount()">Create My Schedule</button>
+    <!-- SIGN IN -->
+    <div id="loginSignInSection">
+      <input type="email" id="loginEmailInput" placeholder="Email address" autocomplete="email">
+      <input type="password" id="loginPasswordInput" placeholder="Password" autocomplete="current-password">
+      <button class="login-btn" id="loginSignInBtn" onclick="signInWithEmail()">Sign In</button>
+      <button class="login-toggle" onclick="toggleAuthMode('signup')">Don't have an account? Create one</button>
     </div>
 
-    <div class="login-divider">or retrieve an existing schedule</div>
-
-    <div id="loginCodeSection">
-      <input type="text" class="login-code-input" id="loginCodeInput" placeholder="Enter your code" maxlength="8">
-      <button class="login-btn" id="loginCodeBtn" onclick="loginWithCode()" style="background:white;color:var(--maroon);border:2px solid var(--maroon);">Retrieve Schedule</button>
+    <!-- SIGN UP -->
+    <div id="loginSignUpSection" style="display:none;">
+      <input type="text" id="signupNameInput" placeholder="Your name" maxlength="60">
+      <input type="email" id="signupEmailInput" placeholder="Email address" autocomplete="email">
+      <input type="password" id="signupPasswordInput" placeholder="Password (at least 6 characters)" autocomplete="new-password">
+      <button class="login-btn" id="loginSignUpBtn" onclick="signUpWithEmail()">Create Account</button>
+      <button class="login-toggle" onclick="toggleAuthMode('signin')">Already have an account? Sign in</button>
     </div>
+
+    <div class="login-divider">or</div>
+
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
 
     <div class="login-error" id="loginError"></div>
+
+    <details class="migrate-section">
+      <summary>Attended last year? Import your previous schedule</summary>
+      <p class="hint">After signing in or creating your account, enter the 6-character code from last year's app to import your saved events.</p>
+      <input type="text" class="login-code-input" id="loginCodeInput" placeholder="Old code (e.g. A3K9P2)" maxlength="8">
+    </details>
+
     <button class="login-skip" onclick="skipLogin()">Continue without saving</button>
   </div>
 </div>
@@ -319,7 +367,7 @@
 <!-- USER BAR (shown when logged in) -->
 <div class="user-bar" id="userBar" style="display:none;">
   <span>Signed in as <span class="user-name" id="userDisplayName"></span></span>
-  <span class="user-code" id="userDisplayCode"></span>
+  <span class="user-code" id="userDisplayEmail" style="font-family:sans-serif;letter-spacing:0;font-size:0.85rem;"></span>
   <span class="sync-status" id="syncStatus"></span>
   <button onclick="logout()">Sign Out</button>
 </div>
@@ -420,6 +468,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
 // ══════════════════════════════════════
@@ -436,6 +485,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 // ══════════════════════════════════════
 // DATA: Each item in `events` is a time-slot group.
@@ -483,18 +534,18 @@ const events = [
     title: "Concurrent Breakout Sessions", type: "breakout",
     location: "", moderator: "",
     subs: [
-      { id: "f-bo11-1", title: "Trust and Connection in Virtual Surgical Care: A Patient Survey", speaker: "Dana I. Anderson, MD", location: "Room 501 — Trust, Communication, & Patient Perspectives", room: "Room 501", roomModerator: "Moderator: Baddr Shakhsheer, MD" },
-      { id: "f-bo11-2", title: "Advancing Healthcare Equity in Transplant Surgery: Cultivating Trust through Communication", speaker: "Ashley N. Suah, MD; Roy Wilson, BA", location: "Room 501", room: "Room 501" },
-      { id: "f-bo11-3", title: "Phrases Commonly Associated with Negatively Perceived Goals of Care Conversation Notes", speaker: "Gina Piscitello, MD, MS", location: "Room 501", room: "Room 501" },
-      { id: "f-bo11-4", title: "Ethics Consultation Services as a Core Component of Institutional Integrity: Lessons from Accreditation Standards", speaker: "Charlotte Harrington, MD", location: "Room 502 — Ethics Services, Policies, & Standards", room: "Room 502", roomModerator: "Moderator: Megan Applewhite, MD, MA" },
-      { id: "f-bo11-5", title: "HLA Fairness in Novel TCR T-Cell Therapies", speaker: "Yifei Hu, MD, PhD", location: "Room 502", room: "Room 502" },
-      { id: "f-bo11-6", title: "Choreographies of Care: Rhythm and Resonance in Clinical Medical Ethics Practice", speaker: "Erika \"Ann\" Jeschke, PhD", location: "Room 502", room: "Room 502" },
-      { id: "f-bo11-7", title: "Transhumanism and the Goals of Medicine: Clinical Boundaries and Theological Reflections", speaker: "Aasim I. Padela, MD, MSc", location: "Room 503 — Philosophy, Theory, & Wisdom", room: "Room 503", roomModerator: "Moderator: Daniel Brudney, PhD" },
-      { id: "f-bo11-8", title: "Salutogenic Medicine and Expressive Autonomy", speaker: "Andrew J. Baldassarre, MA", location: "Room 503", room: "Room 503" },
-      { id: "f-bo11-9", title: "The Ethical and Relational Dynamics of Moral Distress and Practical Wisdom: A Qualitative Study of U.S. Physicians", speaker: "Peter McCarthy, BA; Daniel Kim, PhD, MPH", location: "Room 503", room: "Room 503" },
-      { id: "f-bo11-10", title: "#DoNoHarm: Ethics and Professionalism in the Medfluencer Era", speaker: "Ava Shoal Randel, MA, MDiv", location: "Room 504 — Professionalism & Physician Well-Being", room: "Room 504", roomModerator: "Moderator: Jason Sulkowski, MD" },
-      { id: "f-bo11-11", title: "Say 'No' to 'Yes' Men: The Mandate Against Tying Physician Compensation to Patient Satisfaction Scores", speaker: "Nathaniel Mattera, BA", location: "Room 504", room: "Room 504" },
-      { id: "f-bo11-12", title: "Evaluating and Cultivating Pediatrics Trainees' Knowledge and Attitudes Toward Deafness and Disability in Young Children", speaker: "Cynthia Zhang, BA", location: "Room 504", room: "Room 504" }
+      { id: "f-bo11-1", title: "Trust and Connection in Virtual Surgical Care: A Patient Survey", speaker: "Dana I. Anderson, MD", location: "Room 501 — Trust, Communication, & Patient Perspectives", room: "Room 501", roomTopic: "Trust, Communication, & Patient Perspectives", roomModerator: "Moderator: Baddr Shakhsheer, MD" },
+      { id: "f-bo11-2", title: "Advancing Healthcare Equity in Transplant Surgery: Cultivating Trust through Communication", speaker: "Ashley N. Suah, MD; Roy Wilson, BA", location: "Room 501", room: "Room 501", roomTopic: "Trust, Communication, & Patient Perspectives" },
+      { id: "f-bo11-3", title: "Phrases Commonly Associated with Negatively Perceived Goals of Care Conversation Notes", speaker: "Gina Piscitello, MD, MS", location: "Room 501", room: "Room 501", roomTopic: "Trust, Communication, & Patient Perspectives" },
+      { id: "f-bo11-4", title: "Ethics Consultation Services as a Core Component of Institutional Integrity: Lessons from Accreditation Standards", speaker: "Charlotte Harrington, MD", location: "Room 502 — Ethics Services, Policies, & Standards", room: "Room 502", roomTopic: "Ethics Services, Policies, & Standards", roomModerator: "Moderator: Megan Applewhite, MD, MA" },
+      { id: "f-bo11-5", title: "HLA Fairness in Novel TCR T-Cell Therapies", speaker: "Yifei Hu, MD, PhD", location: "Room 502", room: "Room 502", roomTopic: "Ethics Services, Policies, & Standards" },
+      { id: "f-bo11-6", title: "Choreographies of Care: Rhythm and Resonance in Clinical Medical Ethics Practice", speaker: "Erika \"Ann\" Jeschke, PhD", location: "Room 502", room: "Room 502", roomTopic: "Ethics Services, Policies, & Standards" },
+      { id: "f-bo11-7", title: "Transhumanism and the Goals of Medicine: Clinical Boundaries and Theological Reflections", speaker: "Aasim I. Padela, MD, MSc", location: "Room 503 — Philosophy, Theory, & Wisdom", room: "Room 503", roomTopic: "Philosophy, Theory, & Wisdom", roomModerator: "Moderator: Daniel Brudney, PhD" },
+      { id: "f-bo11-8", title: "Salutogenic Medicine and Expressive Autonomy", speaker: "Andrew J. Baldassarre, MA", location: "Room 503", room: "Room 503", roomTopic: "Philosophy, Theory, & Wisdom" },
+      { id: "f-bo11-9", title: "The Ethical and Relational Dynamics of Moral Distress and Practical Wisdom: A Qualitative Study of U.S. Physicians", speaker: "Peter McCarthy, BA; Daniel Kim, PhD, MPH", location: "Room 503", room: "Room 503", roomTopic: "Philosophy, Theory, & Wisdom" },
+      { id: "f-bo11-10", title: "#DoNoHarm: Ethics and Professionalism in the Medfluencer Era", speaker: "Ava Shoal Randel, MA, MDiv", location: "Room 504 — Professionalism & Physician Well-Being", room: "Room 504", roomTopic: "Professionalism & Physician Well-Being", roomModerator: "Moderator: Jason Sulkowski, MD" },
+      { id: "f-bo11-11", title: "Say 'No' to 'Yes' Men: The Mandate Against Tying Physician Compensation to Patient Satisfaction Scores", speaker: "Nathaniel Mattera, BA", location: "Room 504", room: "Room 504", roomTopic: "Professionalism & Physician Well-Being" },
+      { id: "f-bo11-12", title: "Evaluating and Cultivating Pediatrics Trainees' Knowledge and Attitudes Toward Deafness and Disability in Young Children", speaker: "Cynthia Zhang, BA", location: "Room 504", room: "Room 504", roomTopic: "Professionalism & Physician Well-Being" }
     ]
   },
   { id: "f-lunch", day: "friday", time: "12:00 pm", sort: 1200, title: "Lunch", type: "break", location: "University Room AB", moderator: "", subs: [] },
@@ -511,10 +562,10 @@ const events = [
       { id: "f-c1-6", title: "Preserving Autonomy for Patients with Intellectual Disabilities: Perspectives from Daoist Ethics", speaker: "L. August Yu, MA", location: "Room 503 — Autonomy & Decision-Making", room: "Room 503", roomModerator: "Moderator: Rebecca Propper, MD" },
       { id: "f-c1-7", title: "Autonomy and Its Limits: Reimagining Ethical Engagement Through Shared Decision-Making", speaker: "Mary Simmerling, PhD", location: "Room 503", room: "Room 503" },
       { id: "f-c1-8", title: "The Quality-of-Life Directive: A Patient-Centered Approach to Advance Planning", speaker: "Julie L. Campbell, JD, LLM, CHC", location: "Room 503", room: "Room 503" },
-      { id: "f-c1-9", title: "Patterns of Life-Sustaining, Potentially Non-Beneficial Treatment and the Role of Palliative Care in Critically Ill Patients", speaker: "Ellen Cohn, MD, MPH", location: "Room 504 — Ethical Consistency & Justice in Critical Care", room: "Room 504b", roomModerator: "Moderator: Darren Bryan, MD" },
-      { id: "f-c1-10", title: "Honoring DNR Orders After Suicide Attempts: A Consistent-Preference Approach", speaker: "Charley D. Maples, PhD", location: "Room 504", room: "Room 504b" },
-      { id: "f-c1-11", title: "Inconsistencies in Informed Consent Practices During Critical Care Withdrawal", speaker: "Daniel Fu, MS", location: "Room 504", room: "Room 504b" },
-      { id: "f-c1-12", title: "Whose Justice? Which Distributive Theory?: Contractualism, Organs, and Allocative Justice", speaker: "Bharat Ranganathan, PhD, HEC-C; Karlie Zychowski, MD", location: "Room 504", room: "Room 504b" }
+      { id: "f-c1-9", title: "Patterns of Life-Sustaining, Potentially Non-Beneficial Treatment and the Role of Palliative Care in Critically Ill Patients", speaker: "Ellen Cohn, MD, MPH", location: "Room 504 — Ethical Consistency & Justice in Critical Care", room: "Room 504B", roomModerator: "Moderator: Darren Bryan, MD" },
+      { id: "f-c1-10", title: "Honoring DNR Orders After Suicide Attempts: A Consistent-Preference Approach", speaker: "Charley D. Maples, PhD", location: "Room 504", room: "Room 504B" },
+      { id: "f-c1-11", title: "Inconsistencies in Informed Consent Practices During Critical Care Withdrawal", speaker: "Daniel Fu, MS", location: "Room 504", room: "Room 504B" },
+      { id: "f-c1-12", title: "Whose Justice? Which Distributive Theory?: Contractualism, Organs, and Allocative Justice", speaker: "Bharat Ranganathan, PhD, HEC-C; Karlie Zychowski, MD", location: "Room 504", room: "Room 504B" }
     ]
   },
   { id: "f-break2", day: "friday", time: "1:45 pm", sort: 1345, title: "Break", type: "break", location: "", moderator: "", subs: [] },
@@ -530,11 +581,11 @@ const events = [
   { id: "f-break3", day: "friday", time: "2:45 pm", sort: 1445, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
   {
     id: "f-bo315", day: "friday", time: "3:15 pm", sort: 1515,
-    title: "Concurrent Breakout Sessions: Emergency & Critical Care Ethics", type: "breakout",
+    title: "Concurrent Breakout Sessions", type: "breakout",
     location: "Room 501", moderator: "Moderator: Will Parker, MD, PhD",
     subs: [
-      { id: "f-bo3-1", title: "Ethical Triage in the ER: The Role of Clinical Ethicists in Emergency Departments", speaker: "Kimberly Vargas Barreto, PhD", location: "Room 501" },
-      { id: "f-bo3-2", title: "A Targeted Needs Assessment of End-of-Life Conversation Training in Pediatric Emergency Medicine Fellowship Programs", speaker: "Jacob Schulman, MD, MHPE", location: "Room 501" }
+      { id: "f-bo3-1", title: "Ethical Triage in the ER: The Role of Clinical Ethicists in Emergency Departments", speaker: "Kimberly Vargas Barreto, PhD", location: "Room 501 — Emergency & Critical Care Ethics", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" },
+      { id: "f-bo3-2", title: "A Targeted Needs Assessment of End-of-Life Conversation Training in Pediatric Emergency Medicine Fellowship Programs", speaker: "Jacob Schulman, MD, MHPE", location: "Room 501", room: "Room 501", roomTopic: "Emergency & Critical Care Ethics" }
     ]
   },
   { id: "f-adjourn", day: "friday", time: "4:30 pm", sort: 1630, title: "Adjourn", type: "break", location: "", moderator: "", subs: [] },
@@ -573,14 +624,9 @@ const events = [
   { id: "s-break1", day: "saturday", time: "10:40 am", sort: 1040, title: "Break", type: "break", location: "Refreshments served in Friedman Hall", moderator: "", subs: [] },
   {
     id: "s-prize", day: "saturday", time: "11:00 am", sort: 1100,
-    title: "Awarding of 2026 MacLean Prize", type: "keynote",
-    location: "Friedman Hall (Auditorium)", moderator: "Introduction by Mark Anderson, MD, PhD — Dean of the Biological Sciences Division and Pritzker School of Medicine",
-    subs: []
-  },
-  {
-    id: "s-keynote", day: "saturday", time: "11:00 am", sort: 1101,
-    title: "MacLean Prize Keynote Address: Shared Decision Making and Other Strategically Ambiguous Shape Shifters", type: "keynote",
-    location: "Friedman Hall (Auditorium)", moderator: "Margaret \"Gretchen\" Schwarze, MD, MPP",
+    title: "Awarding of 2026 MacLean Prize & Keynote Address", type: "keynote",
+    location: "Friedman Hall (Auditorium)",
+    moderator: "Introduction by Mark Anderson, MD, PhD — Dean of the Biological Sciences Division and Pritzker School of Medicine<br><br>Keynote: \"Shared Decision Making and Other Strategically Ambiguous Shape Shifters\" — Margaret \"Gretchen\" Schwarze, MD, MPP",
     subs: []
   },
   { id: "s-lunch", day: "saturday", time: "12:00 pm", sort: 1200, title: "Lunch", type: "break", location: "University Room AB", moderator: "", subs: [] },
@@ -690,153 +736,261 @@ const presenters = [
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
-let selected = new Set(JSON.parse(localStorage.getItem('maclean2026_v2') || '[]'));
+// Expand any previously-saved room-level breakout ids into the per-paper ids
+const legacyRoomExpansion = {
+  'f-bo11-r501': ['f-bo11-1', 'f-bo11-2', 'f-bo11-3'],
+  'f-bo11-r502': ['f-bo11-4', 'f-bo11-5', 'f-bo11-6'],
+  'f-bo11-r503': ['f-bo11-7', 'f-bo11-8', 'f-bo11-9'],
+  'f-bo11-r504': ['f-bo11-10', 'f-bo11-11', 'f-bo11-12'],
+  'f-bo315-r501': ['f-bo3-1', 'f-bo3-2']
+};
+// Merged keynote: anyone who previously selected the standalone keynote
+// should now hold the combined prize+keynote event id.
+const legacyIdRemap = {
+  's-keynote': 's-prize'
+};
+function normalizeSelections(arr) {
+  const out = new Set();
+  (arr || []).forEach(id => {
+    if (legacyRoomExpansion[id]) {
+      legacyRoomExpansion[id].forEach(x => out.add(x));
+      return;
+    }
+    if (legacyIdRemap[id]) { out.add(legacyIdRemap[id]); return; }
+    out.add(id);
+  });
+  // For any multi-paper room group, if the user had selected at least one
+  // paper in the room, expand to all papers in that room (matches the new
+  // "one checkbox per room" behavior).
+  if (typeof events !== 'undefined') {
+    events.forEach(ev => {
+      if (!ev.subs || !ev.subs.length) return;
+      const byRoom = {};
+      ev.subs.forEach(s => {
+        const r = s.room || '';
+        if (!r) return;
+        (byRoom[r] = byRoom[r] || []).push(s);
+      });
+      Object.values(byRoom).forEach(group => {
+        if (group.length > 1 && group.some(s => out.has(s.id))) {
+          group.forEach(s => out.add(s.id));
+        }
+      });
+    });
+  }
+  return out;
+}
+let selected = normalizeSelections(JSON.parse(localStorage.getItem('maclean2026_v2') || '[]'));
 let currentDay = 'friday';
 let currentFilter = 'all';
 let currentTab = 'program';
 
-// User session
-let currentUser = JSON.parse(localStorage.getItem('maclean2026_user') || 'null');
-// { name: "...", code: "XXXX" }
+// User session - now keyed by Firebase Auth uid
+let currentUser = null; // { uid, name, email }
 
 // ══════════════════════════════════════
-// LOGIN / ACCOUNT SYSTEM
+// LOGIN / ACCOUNT SYSTEM (Firebase Auth)
 // ══════════════════════════════════════
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
+function showLoginError(msg) {
+  document.getElementById('loginError').textContent = msg || '';
 }
 
-async function createNewAccount() {
-  const nameInput = document.getElementById('loginNameInput');
-  const name = nameInput.value.trim();
-  if (!name) { nameInput.focus(); return; }
+function friendlyAuthError(err) {
+  const code = err && err.code ? err.code : '';
+  const map = {
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/user-not-found': 'No account found with that email.',
+    'auth/wrong-password': 'Incorrect password. Please try again.',
+    'auth/invalid-credential': 'Email or password is incorrect.',
+    'auth/email-already-in-use': 'An account with that email already exists. Try signing in.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/popup-closed-by-user': 'Sign-in window was closed before finishing.',
+    'auth/popup-blocked': 'Popup was blocked by your browser.',
+    'auth/network-request-failed': 'Network error. Check your connection and try again.'
+  };
+  return map[code] || (err && err.message) || 'Something went wrong. Please try again.';
+}
 
-  const btn = document.getElementById('loginNewBtn');
-  btn.disabled = true; btn.textContent = 'Creating...';
-  document.getElementById('loginError').textContent = '';
-
-  try {
-    // Generate unique code, check it doesn't exist
-    let code, exists = true;
-    while (exists) {
-      code = generateCode();
-      const snap = await db.ref('schedules/' + code).once('value');
-      exists = snap.exists();
-    }
-
-    // Save to Firebase
-    await db.ref('schedules/' + code).set({
-      name: name,
-      code: code,
-      createdAt: Date.now(),
-      selections: [...selected]
-    });
-
-    // Save locally
-    currentUser = { name, code };
-    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
-    showLoggedInState();
-    setSyncStatus('Saved');
-  } catch (err) {
-    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
-    console.error('Create account error:', err);
+function toggleAuthMode(mode) {
+  const signIn = document.getElementById('loginSignInSection');
+  const signUp = document.getElementById('loginSignUpSection');
+  showLoginError('');
+  if (mode === 'signup') {
+    signIn.style.display = 'none';
+    signUp.style.display = 'block';
+    document.getElementById('loginSubtitle').textContent = 'Create an account to save your personal schedule and access it from any device.';
+  } else {
+    signIn.style.display = 'block';
+    signUp.style.display = 'none';
+    document.getElementById('loginSubtitle').textContent = 'Sign in to build a personal schedule of the events you wish to attend. Your schedule will sync across your devices.';
   }
-  btn.disabled = false; btn.textContent = 'Create My Schedule';
 }
 
-async function loginWithCode() {
+async function signInWithEmail() {
+  const email = document.getElementById('loginEmailInput').value.trim();
+  const password = document.getElementById('loginPasswordInput').value;
+  if (!email || !password) { showLoginError('Please enter your email and password.'); return; }
+  const btn = document.getElementById('loginSignInBtn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  showLoginError('');
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    // onAuthStateChanged handles the rest
+  } catch (err) {
+    showLoginError(friendlyAuthError(err));
+    console.error('Sign-in error:', err);
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function signUpWithEmail() {
+  const name = document.getElementById('signupNameInput').value.trim();
+  const email = document.getElementById('signupEmailInput').value.trim();
+  const password = document.getElementById('signupPasswordInput').value;
+  if (!name) { showLoginError('Please enter your name.'); return; }
+  if (!email || !password) { showLoginError('Please enter an email and password.'); return; }
+  const btn = document.getElementById('loginSignUpBtn');
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  showLoginError('');
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    if (cred.user && name) {
+      await cred.user.updateProfile({ displayName: name });
+    }
+    // onAuthStateChanged will then bootstrap the user record
+  } catch (err) {
+    showLoginError(friendlyAuthError(err));
+    console.error('Sign-up error:', err);
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+async function signInWithGoogle() {
+  showLoginError('');
+  try {
+    await auth.signInWithPopup(googleProvider);
+  } catch (err) {
+    showLoginError(friendlyAuthError(err));
+    console.error('Google sign-in error:', err);
+  }
+}
+
+// Merge in an old code-based schedule (called after successful auth)
+async function maybeMigrateOldCode(uid) {
   const codeInput = document.getElementById('loginCodeInput');
-  const code = codeInput.value.trim().toUpperCase();
-  if (!code) { codeInput.focus(); return; }
-
-  const btn = document.getElementById('loginCodeBtn');
-  btn.disabled = true; btn.textContent = 'Looking up...';
-  document.getElementById('loginError').textContent = '';
-
+  if (!codeInput) return;
+  const code = (codeInput.value || '').trim().toUpperCase();
+  if (!code) return;
   try {
     const snap = await db.ref('schedules/' + code).once('value');
     if (!snap.exists()) {
-      document.getElementById('loginError').textContent = 'Code not found. Please check and try again.';
-      btn.disabled = false; btn.textContent = 'Retrieve Schedule';
+      setSyncStatus('Old code not found');
       return;
     }
-
     const data = snap.val();
-    currentUser = { name: data.name, code: code };
-    localStorage.setItem('maclean2026_user', JSON.stringify(currentUser));
-
-    // Load their selections
-    if (data.selections && Array.isArray(data.selections)) {
-      selected = new Set(data.selections);
-      localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
-    }
-
-    showLoggedInState();
+    const oldSelections = Array.isArray(data.selections) ? data.selections : [];
+    // Merge with current selections
+    const merged = normalizeSelections([...(selected || []), ...oldSelections]);
+    selected = merged;
+    localStorage.setItem('maclean2026_v2', JSON.stringify([...merged]));
+    await db.ref('users/' + uid + '/selections').set([...merged]);
+    await db.ref('users/' + uid + '/migratedFrom').set(code);
+    setSyncStatus('Previous schedule imported');
     renderProgram();
     updateBadge();
-    setSyncStatus('Loaded');
   } catch (err) {
-    document.getElementById('loginError').textContent = 'Connection error. Please try again.';
-    console.error('Login error:', err);
+    console.error('Migration error:', err);
+    setSyncStatus('Could not import old schedule');
   }
-  btn.disabled = false; btn.textContent = 'Retrieve Schedule';
 }
 
 function skipLogin() {
   document.getElementById('loginOverlay').style.display = 'none';
 }
 
-function logout() {
+async function logout() {
+  try { await auth.signOut(); } catch (e) { console.error(e); }
   currentUser = null;
-  localStorage.removeItem('maclean2026_user');
   document.getElementById('userBar').style.display = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('loginNameInput').value = '';
-  document.getElementById('loginCodeInput').value = '';
-  document.getElementById('loginError').textContent = '';
+  ['loginEmailInput','loginPasswordInput','signupNameInput','signupEmailInput','signupPasswordInput','loginCodeInput']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  showLoginError('');
+  toggleAuthMode('signin');
 }
 
 function showLoggedInState() {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userBar').style.display = 'flex';
-  document.getElementById('userDisplayName').textContent = currentUser.name;
-  document.getElementById('userDisplayCode').textContent = currentUser.code;
+  document.getElementById('userDisplayName').textContent = currentUser.name || 'Guest';
+  document.getElementById('userDisplayEmail').textContent = currentUser.email || '';
 }
 
 function setSyncStatus(msg) {
   const el = document.getElementById('syncStatus');
+  if (!el) return;
   el.textContent = msg;
   if (msg === 'Saving...' || msg === 'Loading...') return;
   setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
 }
 
-// Check if already logged in
-if (currentUser) {
+// Load or create this user's record, then populate selections
+async function bootstrapUser(user) {
+  const uid = user.uid;
+  const name = user.displayName || (user.email ? user.email.split('@')[0] : 'Guest');
+  currentUser = { uid: uid, name: name, email: user.email || '' };
   showLoggedInState();
-  // Sync from Firebase on load
-  (async () => {
-    try {
-      setSyncStatus('Loading...');
-      const snap = await db.ref('schedules/' + currentUser.code).once('value');
-      if (snap.exists()) {
-        const data = snap.val();
-        if (data.selections && Array.isArray(data.selections)) {
-          selected = new Set(data.selections);
-          localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
-          renderProgram();
-          updateBadge();
+  try {
+    setSyncStatus('Loading...');
+    const ref = db.ref('users/' + uid);
+    const snap = await ref.once('value');
+    if (snap.exists()) {
+      const data = snap.val();
+      if (Array.isArray(data.selections)) {
+        const before = JSON.stringify([...data.selections].sort());
+        selected = normalizeSelections(data.selections);
+        const after = JSON.stringify([...selected].sort());
+        localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
+        // Persist migrated form back to Firebase so the legacy ids are cleaned up
+        if (before !== after) {
+          try { await ref.child('selections').set([...selected]); } catch (e) {}
         }
-        setSyncStatus('Synced');
       }
-    } catch (err) {
-      setSyncStatus('Offline');
-      console.error('Sync error:', err);
+    } else {
+      // New user - create a record, preserving any local selections
+      await ref.set({
+        name: name,
+        email: user.email || '',
+        createdAt: Date.now(),
+        selections: [...selected]
+      });
     }
-  })();
+    renderProgram();
+    updateBadge();
+    setSyncStatus('Synced');
+    // If user entered an old code in the migration field, import it now
+    await maybeMigrateOldCode(uid);
+  } catch (err) {
+    setSyncStatus('Offline');
+    console.error('Bootstrap error:', err);
+  }
 }
+
+// React to auth state changes
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    bootstrapUser(user);
+  } else {
+    currentUser = null;
+    document.getElementById('userBar').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    // reset signing buttons
+    const s1 = document.getElementById('loginSignInBtn');
+    if (s1) { s1.disabled = false; s1.textContent = 'Sign In'; }
+    const s2 = document.getElementById('loginSignUpBtn');
+    if (s2) { s2.disabled = false; s2.textContent = 'Create Account'; }
+  }
+});
 
 // ══════════════════════════════════════
 // SAVE & TOGGLE
@@ -845,15 +999,50 @@ function save() {
   localStorage.setItem('maclean2026_v2', JSON.stringify([...selected]));
   updateBadge();
   // Sync to Firebase if logged in
-  if (currentUser) {
+  if (currentUser && currentUser.uid) {
     setSyncStatus('Saving...');
-    db.ref('schedules/' + currentUser.code + '/selections').set([...selected])
+    db.ref('users/' + currentUser.uid + '/selections').set([...selected])
       .then(() => setSyncStatus('Saved'))
       .catch(() => setSyncStatus('Offline'));
   }
 }
 
+// Returns array of sibling subs in the same room when a sub belongs to a
+// multi-presentation room group (e.g. one of 3 papers in Room 502). Returns
+// null when the sub is solo in its room (e.g. a single panel in Auditorium).
+function getRoomGroupSiblings(parentEv, sub) {
+  if (!parentEv || !sub || !sub.room) return null;
+  const siblings = parentEv.subs.filter(s => (s.room || '') === sub.room);
+  return siblings.length > 1 ? siblings : null;
+}
+
+// Derive a clean room topic from the first sub's location ("Room 502 — Topic")
+function deriveRoomTopic(firstSub) {
+  if (!firstSub) return '';
+  if (firstSub.roomTopic) return firstSub.roomTopic;
+  const loc = firstSub.location || '';
+  const m = loc.match(/—\s*(.+)$/);
+  return m ? m[1].trim() : '';
+}
+
 function toggle(id) {
+  // Multi-presentation room groups are all-or-nothing: toggling any paper
+  // toggles every paper in the same room.
+  for (const ev of events) {
+    const clicked = (ev.subs || []).find(s => s.id === id);
+    if (!clicked) continue;
+    const roomSubs = getRoomGroupSiblings(ev, clicked);
+    if (roomSubs) {
+      const anySelected = roomSubs.some(s => selected.has(s.id));
+      if (anySelected) roomSubs.forEach(s => selected.delete(s.id));
+      else roomSubs.forEach(s => selected.add(s.id));
+      save();
+      if (currentTab === 'program') renderProgram();
+      else renderMySchedule();
+      return;
+    }
+    break;
+  }
   if (selected.has(id)) selected.delete(id); else selected.add(id);
   save();
   if (currentTab === 'program') renderProgram();
@@ -942,16 +1131,41 @@ function renderProgram() {
             roomMap[r].push(s);
           });
           roomOrder.forEach(room => {
-            // Show room label with first item's full location if it has extra info
             const firstSub = roomMap[room][0];
             const firstLoc = firstSub.location;
             const roomDisplay = firstLoc && firstLoc.length > room.length ? firstLoc : room;
             const rmMod = firstSub.roomModerator || '';
-            html += `<div class="room-label">${roomDisplay}</div>`;
-            if (rmMod) html += `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:-2px 0 4px;">${rmMod}</div>`;
-            roomMap[room].forEach(sub => {
-              html += renderSubItem(sub);
-            });
+            if (roomMap[room].length > 1) {
+              // One selectable card per room. Toggling uses the first paper id;
+              // the toggle() helper expands that to every paper in the room.
+              const roomSelected = roomMap[room].some(s => selected.has(s.id));
+              const targetId = firstSub.id;
+              const parentMixed = ev.subs.some(s => s.title.startsWith('Panel:')) && ev.subs.some(s => !s.title.startsWith('Panel:'));
+              const tagMarkup = parentMixed ? `<span class="sub-type-tag sub-tag-breakout" style="margin-bottom:6px;">Breakout</span>` : '';
+              const hideRoomHeader = ev.type === 'breakout' && roomOrder.length === 1;
+              html += `<div class="selectable-item ${roomSelected ? 'selected' : ''}" onclick="toggle('${targetId}')" style="flex-direction:row;align-items:flex-start;">
+                <div class="item-check">${roomSelected ? '&#10003;' : ''}</div>
+                <div class="item-content">
+                  ${tagMarkup}
+                  <div class="item-title" style="color:var(--maroon);text-transform:uppercase;font-size:0.78rem;letter-spacing:1px;">${hideRoomHeader ? (firstSub.roomTopic || roomDisplay) : roomDisplay}</div>
+                  ${rmMod && !hideRoomHeader ? `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:4px 0 6px;">${rmMod}</div>` : ''}
+                  <div style="margin-top:6px;">
+                    ${roomMap[room].map(sub => `
+                      <div style="padding:6px 0;border-top:1px dashed var(--border);">
+                        <div style="font-weight:600;font-size:0.92rem;">${sub.title}</div>
+                        <div style="font-size:0.82rem;color:var(--text-light);font-style:italic;">${sub.speaker}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>`;
+            } else {
+              html += `<div class="room-label">${roomDisplay}</div>`;
+              if (rmMod) html += `<div style="font-size:0.82rem;color:var(--maroon-light);font-style:italic;margin:-2px 0 4px;">${rmMod}</div>`;
+              roomMap[room].forEach(sub => {
+                html += renderSubItem(sub);
+              });
+            }
           });
         } else {
           html += `<div class="sub-divider"></div>`;
@@ -986,13 +1200,13 @@ function renderSubItem(sub) {
   const parentEv = events.find(e => (e.subs||[]).some(s => s.id === sub.id));
   const parentHasMixed = parentEv && parentEv.subs.some(s => s.title.startsWith('Panel:')) && parentEv.subs.some(s => !s.title.startsWith('Panel:'));
   const showTag = parentHasMixed;
-  const tagHtml = showTag ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}" style="margin-top:4px;">${isPanel ? 'Panel' : 'Breakout'}</span>` : '';
+  const tagHtml = showTag ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}" style="margin-bottom:6px;align-self:flex-start;">${isPanel ? 'Panel' : 'Breakout'}</span>` : '';
   return `<div class="selectable-item ${isSel ? 'selected' : ''}" onclick="toggle('${sub.id}')">
     <div class="item-check">${isSel ? '&#10003;' : ''}</div>
-    <div class="item-content">
+    <div class="item-content" style="display:flex;flex-direction:column;align-items:flex-start;">
+      ${tagHtml}
       <div class="item-title">${sub.title}</div>
       <div class="item-speaker">${sub.speaker}</div>
-      ${tagHtml}
     </div>
   </div>`;
 }
@@ -1014,12 +1228,31 @@ function renderMySchedule() {
 
   // Collect all selected items into a flat list with time/day info
   const items = [];
+  const seenBreakoutRooms = new Set();
   selected.forEach(id => {
     // Check if it's a sub-item
     if (subLookup[id]) {
       const info = subLookup[id];
       const ev = events.find(e => e.id === info.parentId);
       const sub = ev.subs.find(s => s.id === id);
+      // Breakouts are displayed as one entry per room
+      const roomGroupAll = (sub.room) ? ev.subs.filter(s => (s.room || '') === sub.room) : [];
+      if (roomGroupAll.length > 1) {
+        const room = sub.room || '';
+        const key = info.parentId + '|' + room;
+        if (seenBreakoutRooms.has(key)) return;
+        seenBreakoutRooms.add(key);
+        const roomSubs = ev.subs.filter(s => (s.room || '') === room && selected.has(s.id));
+        items.push({
+          id: roomSubs[0] ? roomSubs[0].id : id, // toggle() on any paper in the room removes them all
+          title: sub.roomTopic || deriveRoomTopic(roomGroupAll[0]) || info.parentTitle,
+          speaker: roomSubs.map(s => s.title + (s.speaker ? ' — ' + s.speaker : '')).join('\n'),
+          location: room || ev.location || '',
+          day: info.day, time: ev.time, sort: info.sort,
+          parentTitle: info.parentTitle, parentType: info.parentType
+        });
+        return;
+      }
       items.push({
         id, title: sub.title, speaker: sub.speaker, location: sub.location || ev.location,
         day: info.day, time: ev.time, sort: info.sort,
@@ -1035,6 +1268,17 @@ function renderMySchedule() {
           parentTitle: '', parentType: ev.type
         });
       }
+    }
+  });
+
+  // Always show meals and breaks alongside the user's selections
+  events.forEach(ev => {
+    if (ev.type === 'break') {
+      items.push({
+        id: ev.id, title: ev.title, speaker: ev.moderator, location: ev.location,
+        day: ev.day, time: ev.time, sort: ev.sort,
+        parentTitle: '', parentType: 'break', isBreak: true
+      });
     }
   });
 
@@ -1064,12 +1308,16 @@ function renderMySchedule() {
         const schedTag = item.parentTitle && item.parentTitle.toLowerCase().includes('concurrent')
           ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}">${isPanel ? 'Panel' : 'Breakout'}</span> `
           : '';
-        h += `<div class="sched-item">
-          <button class="sched-remove" title="Remove" onclick="toggle('${item.id}');renderMySchedule();">&times;</button>
-          ${schedTag}<div class="sched-item-title" style="${schedTag ? 'display:inline' : ''}">${item.title}</div>
-          ${item.speaker ? `<div class="sched-item-speaker">${item.speaker}</div>` : ''}
-          <div class="sched-item-meta">${item.location || ''}${item.parentTitle ? ' &middot; ' + item.parentTitle : ''}</div>
-        </div>`;
+        if (item.isBreak) {
+          h += `<div class="break-card">${item.title}${item.location ? '<div style="font-size:0.8rem;margin-top:2px;">' + item.location + '</div>' : ''}</div>`;
+        } else {
+          h += `<div class="sched-item">
+            <button class="sched-remove" title="Remove" onclick="toggle('${item.id}');renderMySchedule();">&times;</button>
+            ${schedTag}<div class="sched-item-title" style="${schedTag ? 'display:inline' : ''}">${item.title}</div>
+            ${item.speaker ? `<div class="sched-item-speaker">${item.speaker.replace(/\n/g, '<br>')}</div>` : ''}
+            <div class="sched-item-meta">${item.location || ''}${item.parentTitle ? ' &middot; ' + item.parentTitle : ''}</div>
+          </div>`;
+        }
       });
       h += '</div>';
     }
@@ -1079,11 +1327,301 @@ function renderMySchedule() {
   html += renderDaySchedule(fri, 'Friday, April 10');
   html += renderDaySchedule(sat, 'Saturday, April 11');
 
-  html += `<div style="text-align:center;margin-top:8px;">
+  html += `<div style="text-align:center;margin-top:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <button class="day-tab" onclick="exportToCalendar()" style="border-color:var(--maroon);color:var(--maroon);font-size:0.82rem;">&#128197; Add to Calendar</button>
     <button class="day-tab" onclick="if(confirm('Remove all selections?')){selected.clear();save();renderMySchedule();}" style="border-color:#cc0000;color:#cc0000;font-size:0.82rem;">Clear All</button>
   </div>`;
 
   document.getElementById('myScheduleContent').innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// CALENDAR EXPORT (.ics)
+// ══════════════════════════════════════
+// Parse "8:00 am" / "12:30 pm" into {h, m} in 24-hour time
+function parseTime(str) {
+  if (!str) return null;
+  const m = str.trim().toLowerCase().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const ap = m[3];
+  if (ap === 'pm' && h !== 12) h += 12;
+  if (ap === 'am' && h === 12) h = 0;
+  return { h, m: min };
+}
+
+// Friday April 10, 2026 and Saturday April 11, 2026, Central Time (America/Chicago)
+function icsDate(day, time, addMinutes) {
+  const t = parseTime(time);
+  if (!t) return null;
+  const year = 2026, month = 4;
+  const dayNum = day === 'friday' ? 10 : 11;
+  let hour = t.h, min = t.m + (addMinutes || 0);
+  hour += Math.floor(min / 60);
+  min = ((min % 60) + 60) % 60;
+  const pad = n => String(n).padStart(2, '0');
+  // Emit as floating local time (no Z) paired with TZID=America/Chicago
+  return `${year}${pad(month)}${pad(dayNum)}T${pad(hour)}${pad(min)}00`;
+}
+
+function icsEscape(s) {
+  return String(s || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+// End times per parent event, taken directly from the printed program
+// (each block ends when the next one begins).
+const eventEndTimes = {
+  // Friday, April 10
+  'f-meal-breakfast': '9:00 am',
+  'f-breakfast':      '9:00 am',
+  'f-welcome':        '9:15 am',
+  'f-plenary1':       '10:35 am',
+  'f-break1':         '11:00 am',
+  'f-bo11':           '12:00 pm',
+  'f-lunch':          '1:00 pm',
+  'f-conc1':          '1:45 pm',
+  'f-break2':         '2:00 pm',
+  'f-conc2':          '2:45 pm',
+  'f-break3':         '3:15 pm',
+  'f-bo315':          '4:30 pm',
+  'f-adjourn':        '4:45 pm',
+  // Saturday, April 11
+  's-meal-breakfast': '9:00 am',
+  's-breakfast':      '9:00 am',
+  's-faspe':          '10:00 am',
+  's-plenary2':       '10:40 am',
+  's-break1':         '11:00 am',
+  's-prize':          '12:00 pm',
+  's-lunch':          '1:00 pm',
+  's-plenary3':       '2:40 pm',
+  's-break2':         '3:00 pm',
+  's-plenary4':       '4:40 pm',
+  's-closing':        '5:00 pm'
+};
+
+// Returns the end time string for an item, using its parent event id
+function getEndTime(item) {
+  // item.parentId is set for sub-events; for standalone we look up its own id
+  const parentId = item.parentId || item.id;
+  return eventEndTimes[parentId] || null;
+}
+
+// Previously-exported events, keyed by UID, so we can cancel ones that were
+// removed from the schedule and update ones that changed. Each entry stores
+// the minimal fields needed to emit a cancellation VEVENT.
+function loadIcsHistory() {
+  try { return JSON.parse(localStorage.getItem('maclean2026_ics_history') || '{}') || {}; }
+  catch (e) { return {}; }
+}
+function saveIcsHistory(h) {
+  try { localStorage.setItem('maclean2026_ics_history', JSON.stringify(h)); } catch (e) {}
+}
+function nextIcsSequence() {
+  const n = parseInt(localStorage.getItem('maclean2026_ics_seq') || '0', 10) || 0;
+  const next = n + 1;
+  try { localStorage.setItem('maclean2026_ics_seq', String(next)); } catch (e) {}
+  return next;
+}
+
+function buildIcsForItems(items) {
+  const lines = [];
+  lines.push('BEGIN:VCALENDAR');
+  lines.push('VERSION:2.0');
+  lines.push('PRODID:-//MacLean Center//Conference 2026//EN');
+  lines.push('CALSCALE:GREGORIAN');
+  lines.push('METHOD:PUBLISH');
+  // Minimal VTIMEZONE for America/Chicago (CST/CDT) covering April 2026 (DST active)
+  lines.push('BEGIN:VTIMEZONE');
+  lines.push('TZID:America/Chicago');
+  lines.push('BEGIN:STANDARD');
+  lines.push('DTSTART:20251102T020000');
+  lines.push('TZOFFSETFROM:-0500');
+  lines.push('TZOFFSETTO:-0600');
+  lines.push('TZNAME:CST');
+  lines.push('END:STANDARD');
+  lines.push('BEGIN:DAYLIGHT');
+  lines.push('DTSTART:20260308T020000');
+  lines.push('TZOFFSETFROM:-0600');
+  lines.push('TZOFFSETTO:-0500');
+  lines.push('TZNAME:CDT');
+  lines.push('END:DAYLIGHT');
+  lines.push('END:VTIMEZONE');
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const dtstamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+
+  // Every event carries a SEQUENCE that increments on each export, so calendar
+  // apps treat a re-download as an UPDATE to the existing event (matched by
+  // UID) rather than a duplicate.
+  const sequence = nextIcsSequence();
+  const history = loadIcsHistory();
+  const currentUids = new Set();
+  const newHistory = {};
+
+  items.forEach(item => {
+    const ptype = (item.parentType || '').toLowerCase();
+    const isTimedSub = item.isSub && ptype === 'plenary';
+    let start, end;
+    if (isTimedSub) {
+      // 20-minute slot per plenary paper, offset from the parent start time
+      const offset = (item.subIndex || 0) * 20;
+      start = icsDate(item.day, item.time, offset);
+      end = icsDate(item.day, item.time, offset + 20);
+    } else {
+      start = icsDate(item.day, item.time, 0);
+      const endTimeStr = getEndTime(item);
+      end = endTimeStr ? icsDate(item.day, endTimeStr, 0) : icsDate(item.day, item.time, 30);
+    }
+    if (!start || !end) return;
+    const uid = `maclean2026-${item.id}@maclean-conference-2026`;
+    const summary = icsEscape(item.title);
+    const descParts = [];
+    if (item.speaker) descParts.push(item.speaker);
+    if (item.parentTitle) descParts.push('Part of: ' + item.parentTitle);
+    descParts.push('MacLean Center 37th Annual Conference on Clinical Medical Ethics');
+    const description = icsEscape(descParts.join('\n'));
+    const location = icsEscape([item.location, 'David Rubenstein Forum, University of Chicago'].filter(Boolean).join(', '));
+
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + uid);
+    lines.push('DTSTAMP:' + dtstamp);
+    lines.push('SEQUENCE:' + sequence);
+    lines.push('DTSTART;TZID=America/Chicago:' + start);
+    lines.push('DTEND;TZID=America/Chicago:' + end);
+    lines.push('SUMMARY:' + summary);
+    lines.push('DESCRIPTION:' + description);
+    lines.push('LOCATION:' + location);
+    lines.push('STATUS:CONFIRMED');
+    lines.push('TRANSP:OPAQUE');
+    lines.push('END:VEVENT');
+    currentUids.add(uid);
+    newHistory[uid] = { start, end };
+  });
+
+  // Emit cancellations for events that were previously exported but are no
+  // longer in the user's schedule. Calendar apps match on UID + higher
+  // SEQUENCE and remove the event.
+  Object.keys(history).forEach(oldUid => {
+    if (currentUids.has(oldUid)) return;
+    const prev = history[oldUid];
+    if (!prev || !prev.start || !prev.end) return;
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + oldUid);
+    lines.push('DTSTAMP:' + dtstamp);
+    lines.push('SEQUENCE:' + sequence);
+    lines.push('DTSTART;TZID=America/Chicago:' + prev.start);
+    lines.push('DTEND;TZID=America/Chicago:' + prev.end);
+    lines.push('SUMMARY:Cancelled');
+    lines.push('STATUS:CANCELLED');
+    lines.push('END:VEVENT');
+  });
+
+  saveIcsHistory(newHistory);
+
+  lines.push('END:VCALENDAR');
+  // Fold long lines per RFC 5545 (75 octets) – simple char-based fold
+  return lines.map(l => {
+    if (l.length <= 74) return l;
+    const chunks = [];
+    let i = 0;
+    while (i < l.length) {
+      chunks.push((i === 0 ? '' : ' ') + l.slice(i, i + 74));
+      i += 74;
+    }
+    return chunks.join('\r\n');
+  }).join('\r\n') + '\r\n';
+}
+
+function exportToCalendar() {
+  if (selected.size === 0) {
+    alert('Your schedule is empty. Add some events first.');
+    return;
+  }
+  // Collect the same items renderMySchedule uses
+  const items = [];
+  selected.forEach(id => {
+    if (subLookup[id]) {
+      const info = subLookup[id];
+      const ev = events.find(e => e.id === info.parentId);
+      if (!ev) return;
+      const sub = ev.subs.find(s => s.id === id);
+      if (!sub) return;
+      const subIndex = ev.subs.findIndex(s => s.id === id);
+      items.push({
+        id, parentId: info.parentId, title: sub.title, speaker: sub.speaker,
+        location: sub.location || ev.location,
+        day: info.day, time: ev.time, sort: info.sort,
+        parentTitle: info.parentTitle, parentType: info.parentType,
+        subIndex: subIndex, isSub: true
+      });
+    } else {
+      const ev = events.find(e => e.id === id);
+      if (ev) items.push({
+        id, parentId: ev.id, title: ev.title, speaker: ev.moderator, location: ev.location,
+        day: ev.day, time: ev.time, sort: ev.sort,
+        parentTitle: '', parentType: ev.type
+      });
+    }
+  });
+  items.sort((a,b) => (a.day !== b.day ? (a.day === 'friday' ? -1 : 1) : a.sort - b.sort));
+
+  // Collapse breakout sub-events: one calendar entry per (parent, room) using
+  // the room's topic (or parent title if no room topic) as the summary.
+  const seenBreakoutRooms = new Set();
+  const collapsed = [];
+  items.forEach(item => {
+    const parentEv0 = item.isSub ? events.find(e => e.id === item.parentId) : null;
+    const sub0 = parentEv0 ? parentEv0.subs.find(s => s.id === item.id) : null;
+    const roomGroupAll = (sub0 && sub0.room) ? parentEv0.subs.filter(s => (s.room || '') === sub0.room) : [];
+    if (item.isSub && roomGroupAll.length > 1) {
+      const parentEv = parentEv0;
+      const sub = sub0;
+      const room = (sub && sub.room) || '';
+      const key = item.parentId + '|' + room;
+      if (seenBreakoutRooms.has(key)) return;
+      seenBreakoutRooms.add(key);
+      const roomTopic = (sub && sub.roomTopic) || deriveRoomTopic(roomGroupAll[0]) || '';
+      const parentTitle = item.parentTitle || '';
+      const summary = roomTopic || parentTitle;
+      // Gather all selected papers in this room for the description
+      const roomPapers = (parentEv ? parentEv.subs : [])
+        .filter(s => (s.room || '') === room && selected.has(s.id))
+        .map(s => '• ' + s.title + (s.speaker ? ' — ' + s.speaker : ''))
+        .join('\n');
+      collapsed.push({
+        id: item.parentId + '-' + (room || 'all').replace(/\s+/g, ''),
+        parentId: item.parentId,
+        title: summary,
+        speaker: roomPapers,
+        location: room || parentEv.location || '',
+        day: item.day,
+        time: item.time,
+        sort: item.sort,
+        parentTitle: '',
+        parentType: 'breakout',
+        isSub: false
+      });
+    } else {
+      collapsed.push(item);
+    }
+  });
+
+  const ics = buildIcsForItems(collapsed);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'maclean-conference-2026.ics';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  setSyncStatus('Calendar file downloaded');
 }
 
 // ══════════════════════════════════════
@@ -1151,8 +1689,14 @@ renderPresenters();
 updateBadge();
 
 // Enter key handlers for login inputs
-document.getElementById('loginNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') createNewAccount(); });
-document.getElementById('loginCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') loginWithCode(); });
+['loginEmailInput','loginPasswordInput'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') signInWithEmail(); });
+});
+['signupNameInput','signupEmailInput','signupPasswordInput'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') signUpWithEmail(); });
+});
 </script>
 </body>
 </html>
