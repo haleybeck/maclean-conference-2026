@@ -562,6 +562,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
+googleProvider.setCustomParameters({ prompt: 'consent' });
+let googleAccessToken = null;
+try { googleAccessToken = sessionStorage.getItem('maclean2026_gtoken') || null; } catch (e) {}
 
 // ══════════════════════════════════════
 // DATA: Each item in `events` is a time-slot group.
@@ -943,7 +947,11 @@ async function signUpWithEmail() {
 async function signInWithGoogle() {
   showLoginError('');
   try {
-    await auth.signInWithPopup(googleProvider);
+    const result = await auth.signInWithPopup(googleProvider);
+    if (result && result.credential && result.credential.accessToken) {
+      googleAccessToken = result.credential.accessToken;
+      try { sessionStorage.setItem('maclean2026_gtoken', googleAccessToken); } catch (e) {}
+    }
   } catch (err) {
     showLoginError(friendlyAuthError(err));
     console.error('Google sign-in error:', err);
@@ -1412,7 +1420,8 @@ function renderMySchedule() {
   html += renderDaySchedule(sat, 'Saturday, April 11');
 
   html += `<div style="text-align:center;margin-top:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-    <button class="day-tab" onclick="exportToCalendar()" style="border-color:var(--maroon);color:var(--maroon);font-size:0.82rem;">&#128197; Add to Calendar</button>
+    <button class="day-tab" onclick="exportToCalendar()" style="border-color:var(--maroon);color:var(--maroon);font-size:0.82rem;">&#128197; Download .ics file</button>
+    <button class="day-tab" id="gcalSyncBtn" onclick="syncToGoogleCalendar()" style="border-color:var(--maroon);color:var(--maroon);font-size:0.82rem;">&#128257; Sync to Google Calendar</button>
     <button class="day-tab" onclick="if(confirm('Remove all selections?')){selected.clear();save();renderMySchedule();}" style="border-color:#cc0000;color:#cc0000;font-size:0.82rem;">Clear All</button>
   </div>`;
 
@@ -1622,12 +1631,7 @@ function buildIcsForItems(items) {
   }).join('\r\n') + '\r\n';
 }
 
-function exportToCalendar() {
-  if (selected.size === 0) {
-    alert('Your schedule is empty. Add some events first.');
-    return;
-  }
-  // Collect the same items renderMySchedule uses
+function getCollapsedScheduleItems() {
   const items = [];
   selected.forEach(id => {
     if (subLookup[id]) {
@@ -1696,6 +1700,15 @@ function exportToCalendar() {
     }
   });
 
+  return collapsed;
+}
+
+function exportToCalendar() {
+  if (selected.size === 0) {
+    alert('Your schedule is empty. Add some events first.');
+    return;
+  }
+  const collapsed = getCollapsedScheduleItems();
   const ics = buildIcsForItems(collapsed);
   const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -1706,6 +1719,169 @@ function exportToCalendar() {
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
   setSyncStatus('Calendar file downloaded');
+}
+
+// ══════════════════════════════════════
+// GOOGLE CALENDAR SYNC
+// ══════════════════════════════════════
+// Format a schedule item's start/end as RFC3339 in America/Chicago.
+// April 10-11 2026 is during CDT (UTC-5).
+function gcalDateTime(day, time, addMinutes) {
+  const t = parseTime(time);
+  if (!t) return null;
+  const dayNum = day === 'friday' ? 10 : 11;
+  let hour = t.h, min = t.m + (addMinutes || 0);
+  hour += Math.floor(min / 60);
+  min = ((min % 60) + 60) % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return `2026-04-${pad(dayNum)}T${pad(hour)}:${pad(min)}:00-05:00`;
+}
+
+function gcalEventBodyFor(item) {
+  const ptype = (item.parentType || '').toLowerCase();
+  const isTimedSub = item.isSub && ptype === 'plenary';
+  let start, end;
+  if (isTimedSub) {
+    const offset = (item.subIndex || 0) * 20;
+    start = gcalDateTime(item.day, item.time, offset);
+    end = gcalDateTime(item.day, item.time, offset + 20);
+  } else {
+    start = gcalDateTime(item.day, item.time, 0);
+    const endTimeStr = getEndTime(item);
+    end = endTimeStr ? gcalDateTime(item.day, endTimeStr, 0) : gcalDateTime(item.day, item.time, 30);
+  }
+  if (!start || !end) return null;
+  const descLines = [];
+  if (item.speaker) descLines.push(item.speaker);
+  if (item.parentTitle) descLines.push('Part of: ' + item.parentTitle);
+  descLines.push('MacLean Center 37th Annual Conference on Clinical Medical Ethics');
+  return {
+    summary: item.title,
+    description: descLines.join('\n'),
+    location: [item.location, 'David Rubenstein Forum, University of Chicago'].filter(Boolean).join(', '),
+    start: { dateTime: start, timeZone: 'America/Chicago' },
+    end: { dateTime: end, timeZone: 'America/Chicago' },
+    extendedProperties: { private: { maclean2026: item.id } }
+  };
+}
+
+async function ensureGoogleAccessToken() {
+  // Try a ping to the token endpoint - if it fails, re-popup to refresh.
+  if (googleAccessToken) {
+    try {
+      const r = await fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=' + encodeURIComponent(googleAccessToken));
+      if (r.ok) return googleAccessToken;
+    } catch (e) {}
+  }
+  // Need to (re)authenticate with popup to get a fresh access token with calendar scope.
+  const result = await auth.signInWithPopup(googleProvider);
+  if (result && result.credential && result.credential.accessToken) {
+    googleAccessToken = result.credential.accessToken;
+    try { sessionStorage.setItem('maclean2026_gtoken', googleAccessToken); } catch (e) {}
+    return googleAccessToken;
+  }
+  throw new Error('Could not obtain Google access token.');
+}
+
+async function gcalFetch(path, options) {
+  const token = await ensureGoogleAccessToken();
+  const res = await fetch('https://www.googleapis.com/calendar/v3' + path, {
+    ...options,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      ...(options && options.headers ? options.headers : {})
+    }
+  });
+  if (res.status === 401) {
+    // Token went stale mid-sync; clear and retry once.
+    googleAccessToken = null;
+    try { sessionStorage.removeItem('maclean2026_gtoken'); } catch (e) {}
+    const fresh = await ensureGoogleAccessToken();
+    const res2 = await fetch('https://www.googleapis.com/calendar/v3' + path, {
+      ...options,
+      headers: {
+        'Authorization': 'Bearer ' + fresh,
+        'Content-Type': 'application/json',
+        ...(options && options.headers ? options.headers : {})
+      }
+    });
+    return res2;
+  }
+  return res;
+}
+
+async function syncToGoogleCalendar() {
+  if (!currentUser || !currentUser.uid) {
+    alert('Please sign in first.');
+    return;
+  }
+  if (selected.size === 0) {
+    alert('Your schedule is empty. Add some events first.');
+    return;
+  }
+  const btn = document.getElementById('gcalSyncBtn');
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  setSyncStatus('Syncing to Google Calendar…');
+  try {
+    await ensureGoogleAccessToken();
+    // Load previous map of itemId -> googleEventId
+    const mapSnap = await db.ref('users/' + currentUser.uid + '/googleCalMap').once('value');
+    const gcalMap = mapSnap.val() || {};
+    const newMap = {};
+    const collapsed = getCollapsedScheduleItems();
+    // Create or update each collapsed event
+    for (const item of collapsed) {
+      const body = gcalEventBodyFor(item);
+      if (!body) continue;
+      const existingId = gcalMap[item.id];
+      if (existingId) {
+        const r = await gcalFetch('/calendars/primary/events/' + encodeURIComponent(existingId), {
+          method: 'PATCH',
+          body: JSON.stringify(body)
+        });
+        if (r.ok) {
+          newMap[item.id] = existingId;
+        } else if (r.status === 404 || r.status === 410) {
+          // Re-create if the event was deleted on the user's side
+          const r2 = await gcalFetch('/calendars/primary/events', {
+            method: 'POST',
+            body: JSON.stringify(body)
+          });
+          if (r2.ok) {
+            const j = await r2.json();
+            newMap[item.id] = j.id;
+          }
+        }
+      } else {
+        const r = await gcalFetch('/calendars/primary/events', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        if (r.ok) {
+          const j = await r.json();
+          newMap[item.id] = j.id;
+        }
+      }
+    }
+    // Delete events that were previously pushed but are no longer in the schedule
+    for (const oldItemId of Object.keys(gcalMap)) {
+      if (newMap[oldItemId]) continue;
+      const gid = gcalMap[oldItemId];
+      try {
+        await gcalFetch('/calendars/primary/events/' + encodeURIComponent(gid), { method: 'DELETE' });
+      } catch (e) {}
+    }
+    await db.ref('users/' + currentUser.uid + '/googleCalMap').set(newMap);
+    setSyncStatus('Google Calendar synced');
+    alert('Your schedule has been synced to Google Calendar. If you share your Google Calendar with Apple or Outlook, those events will also appear there.');
+  } catch (err) {
+    console.error('Google Calendar sync error:', err);
+    setSyncStatus('Google Calendar sync failed');
+    alert('Could not sync to Google Calendar. You may need to sign in with Google again (the "Continue with Google" option on the sign-in screen) and approve calendar access.');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
 
 // ══════════════════════════════════════
