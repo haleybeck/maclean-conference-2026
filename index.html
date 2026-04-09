@@ -93,6 +93,7 @@
   .item-content { flex: 1; }
   .item-title { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.3; }
   .item-speaker { font-size: 0.82rem; color: var(--text-light); font-style: italic; margin-top: 2px; }
+  .cancelled-badge { display:inline-block; background:var(--maroon); color:white; font-size:0.7rem; font-weight:700; letter-spacing:0.05em; padding:2px 8px; border-radius:3px; margin-bottom:4px; }
   .item-location { font-size: 0.75rem; color: var(--maroon-light); font-family: sans-serif; margin-top: 3px; font-weight: 600; }
 
   .sub-divider { border-top: 1px solid var(--border); margin: 6px 0; }
@@ -162,7 +163,7 @@
   .filter-chip.active { background: var(--maroon); color: white; border-color: var(--maroon); }
 
   /* FAB */
-  .fab { position: fixed; bottom: 24px; right: 24px; background: var(--maroon); color: white; border: none; border-radius: 50px; padding: 14px 24px; font-size: 0.9rem; font-family: 'Georgia', serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(128,0,0,0.35); transition: all 0.2s; z-index: 50; display: none; }
+  .fab { position: fixed; bottom: 48px; right: 24px; background: var(--maroon); color: white; border: none; border-radius: 50px; padding: 14px 24px; font-size: 0.9rem; font-family: 'Georgia', serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(128,0,0,0.35); transition: all 0.2s; z-index: 50; display: none; }
   .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(128,0,0,0.45); }
 
   /* Presenters */
@@ -183,8 +184,14 @@
   /* Conflict */
   .conflict-warning { background: #fff3e0; border: 1px solid #ffcc02; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; font-family: sans-serif; color: #7a5a00; display: flex; align-items: center; gap: 8px; }
 
+  /* Global support banner */
+  .support-banner { position: fixed; bottom: 0; left: 0; right: 0; background: var(--maroon); color: white; text-align: center; font-size: 0.78rem; font-family: 'Georgia', serif; padding: 8px 16px; z-index: 999; }
+  .support-banner a { color: #ffd6d6; text-decoration: underline; }
+  .support-banner a:hover { color: white; }
+  body { padding-bottom: 36px; }
+
   /* Print */
-  @media print { .header, .nav, .fab, .search-wrap, .filter-row, .day-tabs { display: none !important; } .content { padding: 0; } .item-check { display: none !important; } }
+  @media print { .header, .nav, .fab, .search-wrap, .filter-row, .day-tabs, .support-banner { display: none !important; } .content { padding: 0; } .item-check { display: none !important; } body { padding-bottom: 0; } }
 
   /* Responsive */
   @media (max-width: 600px) {
@@ -405,6 +412,8 @@
     </details>
 
     <button class="login-skip" onclick="skipLogin()">Continue without saving</button>
+
+    <p style="margin-top:18px;font-size:0.78rem;color:var(--text-light);line-height:1.4;">Having trouble logging in? Contact Haley Beck at <a href="mailto:haley.beck@bsd.uchicago.edu" style="color:var(--maroon);">haley.beck@bsd.uchicago.edu</a></p>
   </div>
 </div>
 
@@ -535,6 +544,7 @@
     <h2>Contact</h2>
     <p>MacLean Center Staff: Anne Wong, Haley Beck, Natasha Megherea</p>
     <p style="margin-top:6px;">Email: <a href="mailto:macleancenter@bsd.uchicago.edu" style="color:var(--maroon);">macleancenter@bsd.uchicago.edu</a></p>
+    <p style="margin-top:10px;">If you experience technical issues with this app, please contact Haley Beck at <a href="mailto:haley.beck@bsd.uchicago.edu" style="color:var(--maroon);">haley.beck@bsd.uchicago.edu</a>.</p>
   </div>
 </div>
 
@@ -583,7 +593,7 @@ const events = [
     subs: [
       { id: "f-br-1", title: "Empirical Ethics Research", speaker: "Moderator: Micah Prochaska, MD", location: "" },
       { id: "f-br-2", title: "External Grant Funding in Ethics", speaker: "Moderator: Will Parker, MD, PhD", location: "" },
-      { id: "f-br-3", title: "Publishing in Ethics", speaker: "Moderator: Norman Quist", location: "" },
+      { id: "f-br-3", title: "Publishing in Ethics", speaker: "Moderator: Norman Quist", location: "", cancelled: true },
       { id: "f-br-4", title: "Pediatric Ethics", speaker: "Moderator: Rebecca Propper, MD", location: "" }
     ]
   },
@@ -1285,6 +1295,17 @@ function renderSubItem(sub) {
   const parentHasMixed = parentEv && parentEv.subs.some(s => s.title.startsWith('Panel:')) && parentEv.subs.some(s => !s.title.startsWith('Panel:'));
   const showTag = parentHasMixed;
   const tagHtml = showTag ? `<span class="sub-type-tag ${isPanel ? 'sub-tag-panel' : 'sub-tag-breakout'}" style="margin-bottom:6px;align-self:flex-start;">${isPanel ? 'Panel' : 'Breakout'}</span>` : '';
+  if (sub.cancelled) {
+    return `<div class="selectable-item cancelled-item" style="opacity:0.6;pointer-events:none;">
+      <div class="item-check" style="visibility:hidden;"></div>
+      <div class="item-content" style="display:flex;flex-direction:column;align-items:flex-start;">
+        ${tagHtml}
+        <span class="cancelled-badge">CANCELLED</span>
+        <div class="item-title" style="text-decoration:line-through;">${sub.title}</div>
+        <div class="item-speaker" style="text-decoration:line-through;">${sub.speaker}</div>
+      </div>
+    </div>`;
+  }
   return `<div class="selectable-item ${isSel ? 'selected' : ''}" onclick="toggle('${sub.id}')">
     <div class="item-check">${isSel ? '&#10003;' : ''}</div>
     <div class="item-content" style="display:flex;flex-direction:column;align-items:flex-start;">
@@ -1924,5 +1945,10 @@ loadPresenterClaims();
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') signUpWithEmail(); });
 });
 </script>
+
+<div class="support-banner">
+  Technical issues? Contact Haley Beck at <a href="mailto:haley.beck@bsd.uchicago.edu">haley.beck@bsd.uchicago.edu</a>
+</div>
+
 </body>
 </html>
