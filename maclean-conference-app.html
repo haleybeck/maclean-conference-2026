@@ -186,10 +186,11 @@
 
   /* Print */
   /* Global support banner */
-  .support-banner { position: fixed; bottom: 0; left: 0; right: 0; background: var(--maroon); color: white; text-align: center; font-size: 0.78rem; font-family: 'Georgia', serif; padding: 8px 16px; z-index: 999; }
+  .support-banner { position: fixed; bottom: 0; left: 0; right: 0; background: var(--maroon); color: white; text-align: center; font-size: 0.78rem; font-family: 'Georgia', serif; padding: 6px 16px; z-index: 999; display: flex; align-items: center; justify-content: center; gap: 24px; }
   .support-banner a { color: #ffd6d6; text-decoration: underline; }
   .support-banner a:hover { color: white; }
-  body { padding-bottom: 36px; }
+
+  body { padding-bottom: 40px; }
 
   @media print { .header, .nav, .fab, .search-wrap, .filter-row, .day-tabs, .support-banner { display: none !important; } .content { padding: 0; } .item-check { display: none !important; } body { padding-bottom: 0; } }
 
@@ -1177,7 +1178,7 @@ document.getElementById('loginCodeInput').addEventListener('keydown', e => { if 
 </script>
 
 <div class="support-banner">
-  Technical issues? Contact Haley Beck at <a href="mailto:haley.beck@bsd.uchicago.edu">haley.beck@bsd.uchicago.edu</a>
+  <span>Technical issues? Contact Haley Beck at <a href="mailto:haley.beck@bsd.uchicago.edu">haley.beck@bsd.uchicago.edu</a></span>
 </div>
 
 </body>
